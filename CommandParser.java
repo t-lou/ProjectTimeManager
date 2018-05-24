@@ -22,6 +22,20 @@ public class CommandParser {
     }
 
     /**
+     * Get a text which represents the duration in hour, minute and second.
+     *
+     * @param duration Duration to show.
+     * @return Text which shows the duration.
+     */
+    private static String getTextForDuration(Duration duration) {
+        String text = String.format("%3dhr %2dmin %2ds",
+                duration.toHours(),
+                duration.toMinutes() - duration.toHours() * 60L,
+                duration.toMillis() / 1000L - duration.toMinutes() * 60L);
+        return text;
+    }
+
+    /**
      * List all on-going projects and elapsed time.
      */
     public static void listProjects() {
@@ -29,12 +43,9 @@ public class CommandParser {
         System.out.println("The recorded projects:");
         for (String project_name : pm.getListProject()) {
             Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
-            String text = String.format("%3d hr %2d min %2d s",
-                    duration.toHours(),
-                    duration.toMinutes() - duration.toHours() * 60L,
-                    duration.toMillis() / 1000L - duration.toMinutes() * 60L);
+
             System.out.println(project_name);
-            System.out.println("\t" + text);
+            System.out.println("\t" + getTextForDuration(duration));
         }
     }
 
@@ -52,9 +63,15 @@ public class CommandParser {
         Collections.sort(keys);
 
         for (Long day : keys) {
-            final String full_text_date = Instant.ofEpochSecond(day.longValue() * 24L * 3600L).toString();
+            final String full_text_date = Instant.ofEpochSecond(day * 24L * 3600L).toString();
 
-            System.out.println(full_text_date.split("T")[0]);
+            long duration_ms = 0L;
+            for (Interval interval : grouped_log.get(day)) {
+                duration_ms += interval.getDurationMs();
+            }
+
+            System.out.println(full_text_date.split("T")[0] +
+                    "\tElapsed time: " + getTextForDuration(Duration.ofMillis(duration_ms)));
             for (Interval interval : grouped_log.get(day)) {
                 System.out.println("\t" + interval.formatDateTime());
             }
@@ -113,7 +130,7 @@ public class CommandParser {
             case "list": {
                 if (command.length == 1) {
                     listProjects();
-                } else if (command.length == 2 && ProjectManager.isProjectAvailable(command[1])) {
+                } else if ((command.length == 2) && ProjectManager.isProjectAvailable(command[1])) {
                     listProjectLog(command[1]);
                 } else {
                     printHelp();
