@@ -1,4 +1,4 @@
-package ptm;
+/// TODO this is a template source code for establishing GUI.
 
 import java.awt.*;
 

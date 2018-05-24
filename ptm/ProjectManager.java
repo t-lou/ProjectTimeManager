@@ -1,15 +1,13 @@
-package ptm;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/// This class handles the projects.
 public class ProjectManager {
     /**
      * The path of the directory for storing the data.
@@ -50,6 +48,12 @@ public class ProjectManager {
         return Files.exists(Paths.get(_filename));
     }
 
+    /**
+     * Checks whether the project with given name is available.
+     *
+     * @param project_name The name of consulted project.
+     * @return Whether the project with given name is available.
+     */
     public static boolean isProjectAvailable(String project_name) {
         return Files.exists(Paths.get(getLogFilename(project_name)));
     }
@@ -116,15 +120,34 @@ public class ProjectManager {
         }
     }
 
+    /**
+     * Get the logs grouped by date (from Posix epoch) of starting time.
+     *
+     * @return A map with date (from Posix epoch) as key and list of logs as values.
+     */
+    public HashMap<Long, ArrayList<Interval>> getGroupedLog() {
+        return _log_manager.getGroupedIntervals();
+    }
+
+    /**
+     * Get the total time of this project in millisecond.
+     *
+     * @return Total time of this project in millisecond.
+     */
     public long getTotalTimeMs() {
         return _log_manager.getTotalTimeMs();
     }
 
-
+    /**
+     * Start this project.
+     */
     public void start() {
         _log_manager.addNow();
     }
 
+    /**
+     * End this project and log the time.
+     */
     public void end() {
         _log_manager.updateLog(_filename);
     }

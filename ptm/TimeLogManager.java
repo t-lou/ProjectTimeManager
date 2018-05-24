@@ -1,16 +1,23 @@
-package ptm;
-
 import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class Interval {
+    /**
+     * Starting time.
+     */
     private LocalDateTime _time_start;
+
+    /**
+     * End time.
+     */
     private LocalDateTime _time_end;
+
     /**
      * The pattern for saving the timestamp in text.
      */
@@ -40,9 +47,22 @@ class Interval {
         return _time_start.format(_formatter) + " - " + _time_end.format(_formatter);
     }
 
-    public long getDurationMs() {
+    /**
+     * Get the duration of this interval in millisecond.
+     *
+     * @return The duration of this interval in millisecond.
+     */
+    public long getDurationMs()
+    {
         return Duration.between(_time_start, _time_end).toMillis();
     }
+
+    /**
+     * Get the starting time.
+     *
+     * @return The starting time.
+     */
+    public LocalDateTime getStartTime() {return _time_start;}
 
     public Interval(String text) {
         String[] slices = text.split(" - ");
@@ -70,8 +90,10 @@ public class TimeLogManager {
      */
     private Logger _log;
 
+    /**
+     * Starting time of the latest interval (on-going interval if this project is opened).
+     */
     private LocalDateTime _now;
-
 
     /**
      * Write the recorded time entries to file with given filename.
@@ -165,12 +187,38 @@ public class TimeLogManager {
         _log.log(Level.INFO, "Added now as starting time " + _now.toString());
     }
 
+    /**
+     *  Get the total elapsed time of all logped intervals in millisecond.
+     *
+     * @return The total elapsed time of all logped intervals in millisecond.
+     */
     public long getTotalTimeMs() {
         long total_duration_ms = 0L;
         for (Interval interval : _time_entries) {
             total_duration_ms += interval.getDurationMs();
         }
         return total_duration_ms;
+    }
+
+    /**
+     * Group the logged intervals with days from Posix time and return it as HashMap.
+     *
+     * @return HashMap with date from Posix epoch sa key and logged intervals as values.
+     */
+    public HashMap<Long, ArrayList<Interval>> getGroupedIntervals() {
+        HashMap<Long, ArrayList<Interval>> map = new HashMap<>();
+
+        for (Interval interval: _time_entries)
+        {
+            final Long day = interval.getStartTime().toLocalDate().toEpochDay();
+            if (!map.containsKey(day))
+            {
+                map.put(day, new ArrayList<>());
+            }
+            map.get(day).add(interval);
+        }
+
+        return map;
     }
 
     public TimeLogManager(Logger log) {
