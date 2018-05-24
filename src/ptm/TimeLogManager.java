@@ -1,13 +1,16 @@
 package ptm;
 
 import java.io.*;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TimeLogManager {
+class Interval {
+    private LocalDateTime _time_start;
+    private LocalDateTime _time_end;
     /**
      * The pattern for saving the timestamp in text.
      */
@@ -19,71 +22,92 @@ public class TimeLogManager {
     static private DateTimeFormatter _formatter = DateTimeFormatter.ofPattern(_pattern);
 
     /**
-     * The list of cached timestamps.
-     */
-    private ArrayList<LocalDateTime> _time_entries = new ArrayList<LocalDateTime>();
-
-    /**
-     * The logger for this class.
-     */
-    private static final Logger _log = Logger.getLogger("ptm");
-
-    /**
      * Read and parse the timestamp from the given text.
      *
      * @param text The text to read.
      * @return The timestamp represented in the given text.
      */
-    private LocalDateTime parseDateTime(String text) {
+    private static LocalDateTime parseDateTime(String text) {
         return LocalDateTime.parse(text, _formatter);
     }
 
     /**
      * Return the text which represents the given timestamp.
      *
-     * @param data_time The timestamp to represent.
      * @return The text for this timestamp.
      */
-    private String formatDateTime(LocalDateTime data_time) {
-        return data_time.format(_formatter);
+    public String formatDateTime() {
+        return _time_start.format(_formatter) + " - " + _time_end.format(_formatter);
     }
+
+    public long getDurationMs() {
+        return Duration.between(_time_start, _time_end).toMillis();
+    }
+
+    public Interval(String text) {
+        String[] slices = text.split(" - ");
+
+        assert slices.length == 2 : "Line in log cannot be parsed.";
+
+        _time_start = parseDateTime(slices[0]);
+        _time_end = parseDateTime(slices[1]);
+    }
+
+    public Interval(LocalDateTime time_start, LocalDateTime time_end) {
+        _time_start = time_start;
+        _time_end = time_end;
+    }
+}
+
+public class TimeLogManager {
+    /**
+     * The list of cached timestamps.
+     */
+    private ArrayList<Interval> _time_entries = new ArrayList<>();
+
+    /**
+     * The logger for this class.
+     */
+    private Logger _log;
+
+    private LocalDateTime _now;
+
 
     /**
      * Write the recorded time entries to file with given filename.
      *
      * @param filename The given filename.
      */
-    public void writeLog(String filename) {
-        if (!_time_entries.isEmpty() && (_time_entries.size() % 2) == 0) {
-            // the number of the cached timestamps should be correct, open file and append
-            File file = new File(filename);
-            try {
+    public void updateLog(String filename) {
+        File file = new File(filename);
+        try {
 
-                FileOutputStream out_stream = new FileOutputStream(file, true);
+            FileOutputStream out_stream = new FileOutputStream(file, false);
 
-                BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
+            BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
 
-                for (LocalDateTime time_entry : _time_entries) {
-                    // for each timestamp, write the text for it and write to file
-                    br.write(formatDateTime(time_entry));
-                    br.newLine();
-                    br.flush();
-                }
-
-                br.close();
-
-                _log.log(Level.INFO, "Wrote " + _time_entries.size() + " time entries.");
-
-                // this file is supposed to be finished, clear the cached timestamps
-                _time_entries.clear();
-
-            } catch (Exception ex) {
-                _log.log(Level.SEVERE, ex.getMessage());
+            for (Interval interval : _time_entries) {
+                // for each timestamp, write the text for it and write to file
+                br.write(interval.formatDateTime());
+                br.newLine();
+                br.flush();
             }
-        } else {
-            // the number of the cached timestamps is not right
-            _log.log(Level.WARNING, "The number of time entries is odd or zero.");
+            String text = new Interval(_now, LocalDateTime.now()).formatDateTime();
+            br.write(text);
+            br.newLine();
+            br.flush();
+
+            br.close();
+
+            _log.log(Level.INFO, "Wrote " + _time_entries.size() + " time entries.");
+
+            // this file is supposed to be finished, clear the cached timestamps
+            _time_entries.clear();
+
+        } catch (Exception ex) {
+            _log.log(Level.SEVERE, ex.getMessage());
         }
+
     }
 
     /**
@@ -106,9 +130,15 @@ public class TimeLogManager {
 
                 BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
 
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    _time_entries.add(parseDateTime(line));
+                String line;
+                while (true) {
+                    line = br.readLine();
+
+                    if (line == null || line.equals("")) {
+                        break;
+                    }
+
+                    _time_entries.add(new Interval(line));
                 }
 
                 br.close();
@@ -116,15 +146,6 @@ public class TimeLogManager {
                 // somewhere problem occurs
                 _log.log(Level.SEVERE, ex.getMessage());
                 return false;
-            }
-
-            if (_time_entries.size() % 2 != 0) {
-                // the number of the timestamp entries is not right (should be even)
-                _time_entries.clear();
-                _log.log(Level.SEVERE, "Logging file " + filename + " contains odd number of entries.");
-                return false;
-            } else {
-                _log.log(Level.INFO, "Read " + _time_entries.size() + " time entries.");
             }
 
             return true;
@@ -139,10 +160,20 @@ public class TimeLogManager {
      * Add current timestamp to the cache list.
      */
     public void addNow() {
-        LocalDateTime now = LocalDateTime.now();
+        _now = LocalDateTime.now();
         // record this timestamp
-        _log.log(Level.INFO, "Added time " + formatDateTime(now));
-        // add the current timestamp to cached list of timestamps
-        _time_entries.add(now);
+        _log.log(Level.INFO, "Added now as starting time " + _now.toString());
+    }
+
+    public long getTotalTimeMs() {
+        long total_duration_ms = 0L;
+        for (Interval interval : _time_entries) {
+            total_duration_ms += interval.getDurationMs();
+        }
+        return total_duration_ms;
+    }
+
+    public TimeLogManager(Logger log) {
+        _log = log;
     }
 }

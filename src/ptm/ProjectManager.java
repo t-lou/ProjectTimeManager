@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,12 +14,12 @@ public class ProjectManager {
     /**
      * The path of the directory for storing the data.
      */
-    private String _cache_path = ".ptm_projects";
+    private static String _cache_path = ".ptm_projects";
 
     /**
      * The extension for logging data.
      */
-    private String _extension = ".prt";
+    private static String _extension = ".prt";
 
     /**
      * The name of file for this project, if the Manager is used to manage one project.
@@ -32,12 +34,12 @@ public class ProjectManager {
     /**
      * The log manager for time used in this project.
      */
-    private TimeLogManager _log_manager = new TimeLogManager();
+    private TimeLogManager _log_manager = new TimeLogManager(_log);
 
     /**
      * The logger for this class.
      */
-    private static final Logger _log = Logger.getLogger("ptm");
+    private static Logger _log = Logger.getLogger("ptm");
 
     /**
      * Checks whether the save data for this project exists.
@@ -48,14 +50,18 @@ public class ProjectManager {
         return Files.exists(Paths.get(_filename));
     }
 
+    public static boolean isProjectAvailable(String project_name) {
+        return Files.exists(Paths.get(getLogFilename(project_name)));
+    }
+
     /**
      * Get the filename for the logged time.
      *
      * @param project_name The name of this project.
      * @return
      */
-    private String getLogFilename(String project_name) {
-        return Paths.get(_cache_path, _name + _extension).toString();
+    private static String getLogFilename(String project_name) {
+        return Paths.get(_cache_path, project_name + _extension).toString();
     }
 
     /**
@@ -69,7 +75,7 @@ public class ProjectManager {
         _filename = getLogFilename(project_name);
 
         if (isProjectAvailable()) {
-            _log.log(Level.INFO, "Project " + project_name + " exists.");
+            _log.log(Level.FINE, "Project " + project_name + " exists.");
 
             _log_manager.readLog(_filename);
         } else {
@@ -108,6 +114,19 @@ public class ProjectManager {
         } else {
             _log.log(Level.SEVERE, "Project " + project_name + " does not exist, will not delete.");
         }
+    }
+
+    public long getTotalTimeMs() {
+        return _log_manager.getTotalTimeMs();
+    }
+
+
+    public void start() {
+        _log_manager.addNow();
+    }
+
+    public void end() {
+        _log_manager.updateLog(_filename);
     }
 
     public ProjectManager() {
