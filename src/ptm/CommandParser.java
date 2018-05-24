@@ -9,6 +9,8 @@ public class CommandParser {
         System.out.println("");
         System.out.println("list");
         System.out.println("\tList all on-going projects with elapsed time.");
+        System.out.println("start PROJECT_NAME");
+        System.out.println("\tStart one project. If this project is not found, a confirmation is needed.");
     }
 
     public static void listProjects() {
