@@ -1,5 +1,6 @@
 import java.io.*;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -220,6 +221,8 @@ public class TimeLogManager {
 
         return map;
     }
+
+    LocalDateTime getStartTime() {return _now;}
 
     public TimeLogManager(Logger log) {
         _log = log;

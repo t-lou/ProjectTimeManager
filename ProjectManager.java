@@ -1,6 +1,8 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,12 +14,14 @@ public class ProjectManager {
     /**
      * The path of the directory for storing the data.
      */
-    private static String _cache_path = ".ptm_projects";
+    final private static String _cache_path = ".ptm_projects";
 
     /**
      * The extension for logging data.
      */
-    private static String _extension = ".prt";
+    final private static String _extension = ".prt";
+
+    final private static String _path_lock = Paths.get(_cache_path, "lock.lk").toString();
 
     /**
      * The name of file for this project, if the Manager is used to manage one project.
@@ -110,14 +114,10 @@ public class ProjectManager {
      *
      * @param project_name The name of this project.
      */
-    public void deleteProject(String project_name) {
-        String filename = getLogFilename(project_name);
-        if (Files.exists(Paths.get(filename))) {
-            _log.log(Level.INFO, "Remove data for " + project_name + ".");
-            new File(filename).delete();
-        } else {
-            _log.log(Level.SEVERE, "Project " + project_name + " does not exist, will not delete.");
-        }
+    public static void deleteProject(String project_name) {
+        assert isProjectAvailable(project_name) : "Project " + project_name + " not found.";
+
+        new File(getLogFilename(project_name)).delete();
     }
 
     /**
@@ -139,9 +139,28 @@ public class ProjectManager {
     }
 
     /**
+     * Checks whether another project is running.
+     * @return Whether another project is running.
+     */
+    private static boolean isRunning() {
+        return Files.exists(Paths.get(_path_lock));
+    }
+
+    /**
      * Start this project.
      */
     public void start() {
+        if (isRunning()) {
+            System.out.println("Another project is running.");
+            System.exit(1);
+        }
+
+        try {
+            new File(_path_lock).createNewFile();
+        } catch (Exception ex) {
+            _log.severe("Cannot establish lock file, thus cannot start.");
+            System.exit(1);
+        }
         _log_manager.addNow();
     }
 
@@ -149,12 +168,20 @@ public class ProjectManager {
      * End this project and log the time.
      */
     public void end() {
+        if (!isRunning()) {
+            _log.severe("No project is running. ");
+            _log.severe("Start time: " + _log_manager.getStartTime().toString());
+            _log.severe("End time:   " + LocalDateTime.now().toString());
+            System.exit(1);
+        }
+
         _log_manager.updateLog(_filename);
+        new File(_path_lock).delete();
     }
 
     public ProjectManager() {
         // if the directory for data is not availalble, create the directory.
-        File file_cache_dir = new File(_cache_path);
+        final File file_cache_dir = new File(_cache_path);
         if (!file_cache_dir.exists()) {
             file_cache_dir.mkdirs();
         }

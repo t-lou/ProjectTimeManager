@@ -2,6 +2,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -28,7 +29,7 @@ public class CommandParser {
      * @return Text which shows the duration.
      */
     private static String getTextForDuration(Duration duration) {
-        String text = String.format("%3dhr %2dmin %2ds",
+        final String text = String.format("%3dhr %2dmin %2ds",
                 duration.toHours(),
                 duration.toMinutes() - duration.toHours() * 60L,
                 duration.toMillis() / 1000L - duration.toMinutes() * 60L);
@@ -39,10 +40,10 @@ public class CommandParser {
      * List all on-going projects and elapsed time.
      */
     public static void listProjects() {
-        ProjectManager pm = new ProjectManager();
+        final ProjectManager pm = new ProjectManager();
         System.out.println("The recorded projects:");
         for (String project_name : pm.getListProject()) {
-            Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
+            final Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
 
             System.out.println(project_name);
             System.out.println("\t" + getTextForDuration(duration));
@@ -76,6 +77,37 @@ public class CommandParser {
                 System.out.println("\t" + interval.formatDateTime());
             }
         }
+    }
+
+    /**
+     * List the logs for all given projects.
+     *
+     * @param project_names The list of project names.
+     */
+    public static void listProjectsLog(String[] project_names) {
+        for (String name : project_names) {
+            assert ProjectManager.isProjectAvailable(name) : "Project " + name + " not found.";
+            System.out.println("--------------------------------------");
+
+            System.out.println(name);
+            listProjectLog(name);
+
+            System.out.println("--------------------------------------");
+        }
+    }
+
+    /**
+     * Checks whether all given projects are available.
+     *
+     * @param project_names The list of project names.
+     * @return Whether all given projects are available.
+     */
+    public static boolean areProjectsAllAvailable(String[] project_names) {
+        ArrayList<Boolean> is_available = new ArrayList<>();
+        for (String name : project_names) {
+            is_available.add(ProjectManager.isProjectAvailable(name));
+        }
+        return !is_available.contains(false);
     }
 
     /**
@@ -130,15 +162,34 @@ public class CommandParser {
             case "list": {
                 if (command.length == 1) {
                     listProjects();
-                } else if ((command.length == 2) && ProjectManager.isProjectAvailable(command[1])) {
-                    listProjectLog(command[1]);
+                } else if ((command.length == 2) && command[1].equals("*")) {
+                    listProjectsLog(new ProjectManager().getListProject().toArray(new String[1]));
                 } else {
-                    printHelp();
+                    final String[] project_names = Arrays.copyOfRange(command, 1, command.length);
+                    if (areProjectsAllAvailable(project_names)) {
+                        listProjectsLog(project_names);
+                    } else {
+                        System.out.println("Not all given names are found, the project include:");
+                        listProjects();
+                    }
+                }
+                break;
+            }
+            case "delete": {
+                String[] project_names = Arrays.copyOfRange(command, 1, command.length);
+                if (areProjectsAllAvailable(project_names)) {
+                    for (String name : project_names) {
+                        ProjectManager.deleteProject(name);
+                    }
+                } else {
+                    System.out.println("Not all given names are found, the project include:");
+                    listProjects();
                 }
                 break;
             }
             default: {
                 printHelp();
+                break;
             }
         }
     }
