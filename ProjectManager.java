@@ -140,6 +140,7 @@ public class ProjectManager {
 
     /**
      * Checks whether another project is running.
+     *
      * @return Whether another project is running.
      */
     private static boolean isRunning() {

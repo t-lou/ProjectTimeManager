@@ -53,8 +53,7 @@ class Interval {
      *
      * @return The duration of this interval in millisecond.
      */
-    public long getDurationMs()
-    {
+    public long getDurationMs() {
         return Duration.between(_time_start, _time_end).toMillis();
     }
 
@@ -63,7 +62,9 @@ class Interval {
      *
      * @return The starting time.
      */
-    public LocalDateTime getStartTime() {return _time_start;}
+    public LocalDateTime getStartTime() {
+        return _time_start;
+    }
 
     public Interval(String text) {
         String[] slices = text.split(" - ");
@@ -189,7 +190,7 @@ public class TimeLogManager {
     }
 
     /**
-     *  Get the total elapsed time of all logped intervals in millisecond.
+     * Get the total elapsed time of all logped intervals in millisecond.
      *
      * @return The total elapsed time of all logped intervals in millisecond.
      */
@@ -209,11 +210,9 @@ public class TimeLogManager {
     public HashMap<Long, ArrayList<Interval>> getGroupedIntervals() {
         HashMap<Long, ArrayList<Interval>> map = new HashMap<>();
 
-        for (Interval interval: _time_entries)
-        {
+        for (Interval interval : _time_entries) {
             final Long day = interval.getStartTime().toLocalDate().toEpochDay();
-            if (!map.containsKey(day))
-            {
+            if (!map.containsKey(day)) {
                 map.put(day, new ArrayList<>());
             }
             map.get(day).add(interval);
@@ -222,7 +221,9 @@ public class TimeLogManager {
         return map;
     }
 
-    LocalDateTime getStartTime() {return _now;}
+    LocalDateTime getStartTime() {
+        return _now;
+    }
 
     public TimeLogManager(Logger log) {
         _log = log;
