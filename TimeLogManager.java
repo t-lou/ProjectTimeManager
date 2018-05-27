@@ -1,6 +1,5 @@
 import java.io.*;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -67,7 +66,7 @@ class Interval {
     }
 
     public Interval(String text) {
-        String[] slices = text.split(" - ");
+        final String[] slices = text.split(" - ");
 
         assert slices.length == 2 : "Line in log cannot be parsed.";
 
@@ -95,7 +94,7 @@ public class TimeLogManager {
     /**
      * Starting time of the latest interval (on-going interval if this project is opened).
      */
-    private LocalDateTime _now;
+    private LocalDateTime _time_start;
 
     /**
      * Write the recorded time entries to file with given filename.
@@ -105,7 +104,6 @@ public class TimeLogManager {
     public void updateLog(String filename) {
         File file = new File(filename);
         try {
-
             FileOutputStream out_stream = new FileOutputStream(file, false);
 
             BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
@@ -116,7 +114,7 @@ public class TimeLogManager {
                 br.newLine();
                 br.flush();
             }
-            String text = new Interval(_now, LocalDateTime.now()).formatDateTime();
+            String text = new Interval(_time_start, LocalDateTime.now()).formatDateTime();
             br.write(text);
             br.newLine();
             br.flush();
@@ -184,9 +182,9 @@ public class TimeLogManager {
      * Add current timestamp to the cache list.
      */
     public void addNow() {
-        _now = LocalDateTime.now();
+        _time_start = LocalDateTime.now();
         // record this timestamp
-        _log.log(Level.INFO, "Added now as starting time " + _now.toString());
+        _log.log(Level.INFO, "Added now as starting time " + _time_start.toString());
     }
 
     /**
@@ -195,11 +193,7 @@ public class TimeLogManager {
      * @return The total elapsed time of all logped intervals in millisecond.
      */
     public long getTotalTimeMs() {
-        long total_duration_ms = 0L;
-        for (Interval interval : _time_entries) {
-            total_duration_ms += interval.getDurationMs();
-        }
-        return total_duration_ms;
+        return _time_entries.stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
     }
 
     /**
@@ -222,7 +216,7 @@ public class TimeLogManager {
     }
 
     LocalDateTime getStartTime() {
-        return _now;
+        return _time_start;
     }
 
     public TimeLogManager(Logger log) {

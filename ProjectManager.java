@@ -1,5 +1,4 @@
 import java.io.File;
-import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -98,6 +97,7 @@ public class ProjectManager {
      */
     public ArrayList<String> getListProject() {
         ArrayList<String> filenames = new ArrayList<String>();
+
         for (final File file : new File(_cache_path).listFiles()) {
             String filename = file.getName();
             int pos_point = filename.lastIndexOf(".");

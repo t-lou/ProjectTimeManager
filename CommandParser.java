@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /// This class parses the command and input data.
 public class CommandParser {
@@ -33,6 +34,7 @@ public class CommandParser {
                 duration.toHours(),
                 duration.toMinutes() - duration.toHours() * 60L,
                 duration.toMillis() / 1000L - duration.toMinutes() * 60L);
+
         return text;
     }
 
@@ -42,7 +44,7 @@ public class CommandParser {
     public static void listProjects() {
         final ProjectManager pm = new ProjectManager();
         System.out.println("The recorded projects:");
-        for (String project_name : pm.getListProject()) {
+        for (final String project_name : pm.getListProject()) {
             final Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
 
             System.out.println(project_name);
@@ -56,23 +58,21 @@ public class CommandParser {
      * @param project_name Name of the project.
      */
     public static void listProjectLog(String project_name) {
-        ProjectManager pm = new ProjectManager(project_name);
-        HashMap<Long, ArrayList<Interval>> grouped_log = pm.getGroupedLog();
+        final ProjectManager pm = new ProjectManager(project_name);
+        final HashMap<Long, ArrayList<Interval>> grouped_log = pm.getGroupedLog();
 
-        ArrayList<Long> keys = new ArrayList<>();
-        keys.addAll(grouped_log.keySet());
+        ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet());
         Collections.sort(keys);
 
-        for (Long day : keys) {
+        for (final Long day : keys) {
             final String full_text_date = Instant.ofEpochSecond(day * 24L * 3600L).toString();
 
-            long duration_ms = 0L;
-            for (Interval interval : grouped_log.get(day)) {
-                duration_ms += interval.getDurationMs();
-            }
+            final long duration_ms = grouped_log.get(day).stream().map(Interval::getDurationMs)
+                    .mapToLong(l -> l).sum();
 
             System.out.println(full_text_date.split("T")[0] +
                     "\tElapsed time: " + getTextForDuration(Duration.ofMillis(duration_ms)));
+
             for (Interval interval : grouped_log.get(day)) {
                 System.out.println("\t" + interval.formatDateTime());
             }
@@ -85,7 +85,7 @@ public class CommandParser {
      * @param project_names The list of project names.
      */
     public static void listProjectsLog(String[] project_names) {
-        for (String name : project_names) {
+        for (final String name : project_names) {
             assert ProjectManager.isProjectAvailable(name) : "Project " + name + " not found.";
             System.out.println("--------------------------------------");
 
@@ -103,11 +103,8 @@ public class CommandParser {
      * @return Whether all given projects are available.
      */
     public static boolean areProjectsAllAvailable(String[] project_names) {
-        ArrayList<Boolean> is_available = new ArrayList<>();
-        for (String name : project_names) {
-            is_available.add(ProjectManager.isProjectAvailable(name));
-        }
-        return !is_available.contains(false);
+        return !Arrays.stream(project_names).map(ProjectManager::isProjectAvailable)
+                .collect(Collectors.toList()).contains(false);
     }
 
     /**
@@ -128,7 +125,7 @@ public class CommandParser {
 
         while (true) {
             try {
-                Thread.sleep(500L);
+                Thread.sleep(1000L);
             } catch (InterruptedException ex) {
                 System.out.println("Sleep interrupted! Check date time!");
             }
@@ -149,7 +146,8 @@ public class CommandParser {
                         startProject(project_name);
                     } else {
                         System.out.println("Project " + project_name + " not found, create now? (y/yes to continue)");
-                        String input = System.console().readLine();
+
+                        final String input = System.console().readLine();
                         if (input.equals("yes") || input.equals("y")) {
                             startProject(project_name);
                         }
@@ -176,9 +174,10 @@ public class CommandParser {
                 break;
             }
             case "delete": {
-                String[] project_names = Arrays.copyOfRange(command, 1, command.length);
+                final String[] project_names = Arrays.copyOfRange(command, 1, command.length);
+
                 if (areProjectsAllAvailable(project_names)) {
-                    for (String name : project_names) {
+                    for (final String name : project_names) {
                         ProjectManager.deleteProject(name);
                     }
                 } else {
