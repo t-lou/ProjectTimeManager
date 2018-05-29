@@ -132,6 +132,10 @@ public class CommandParser {
         }
     }
 
+    private static void startGui() {
+        GuiWin window = new GuiWin();
+    }
+
     /**
      * Parse the console command.
      *
@@ -184,6 +188,10 @@ public class CommandParser {
                     System.out.println("Not all given names are found, the project include:");
                     listProjects();
                 }
+                break;
+            }
+            case "x": {
+                startGui();
                 break;
             }
             default: {
