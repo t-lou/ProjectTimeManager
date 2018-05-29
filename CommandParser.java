@@ -29,7 +29,7 @@ public class CommandParser {
      * @param duration Duration to show.
      * @return Text which shows the duration.
      */
-    private static String getTextForDuration(Duration duration) {
+    public static String getTextForDuration(Duration duration) {
         final String text = String.format("%3dhr %2dmin %2ds",
                 duration.toHours(),
                 duration.toMinutes() - duration.toHours() * 60L,
@@ -133,7 +133,7 @@ public class CommandParser {
     }
 
     private static void startGui() {
-        GuiWin window = new GuiWin();
+        new GuiWin();
     }
 
     /**
