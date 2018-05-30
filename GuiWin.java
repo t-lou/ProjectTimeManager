@@ -11,6 +11,7 @@ import java.util.HashMap;
 public class GuiWin {
 
     private enum Mod {
+        StartProject,
         ListProject,
         ShowPorject,
         ListProjectLogs,
@@ -108,7 +109,54 @@ public class GuiWin {
         _gui.add(panel);
 
         _gui.pack();
+        _gui.setVisible(true);
+    }
 
+    private void startProjectMenu() {
+        final ArrayList<String> project_names = new ProjectManager().getListProject();
+
+        _gui = new JFrame("Choose Project to Start");
+        _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        final JPanel panel = new JPanel();
+        panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * (project_names.size() + 1)));
+
+        final JTextField field = new JTextField();
+        field.setPreferredSize(_dimension);
+
+        field.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                _gui.setVisible(false);
+                _gui.dispose();
+                _gui = null;
+
+                CommandParser.startProject(field.getText());
+            }
+        });
+        panel.add(field, BorderLayout.CENTER);
+
+        for (final String project_name : project_names) {
+            final JButton button = new JButton(project_name);
+
+            button.setPreferredSize(_dimension);
+
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    _gui.setVisible(false);
+                    _gui.dispose();
+                    _gui = null;
+
+                    CommandParser.startProject(project_name);
+                }
+            });
+
+            panel.add(button);
+        }
+
+        _gui.add(panel);
+
+        _gui.pack();
         _gui.setVisible(true);
     }
 
@@ -116,13 +164,19 @@ public class GuiWin {
         switch (mod) {
             case ListProject: {
                 showProjectList();
+                break;
             }
             case ShowPorject: {
                 assert params.length == 1;
                 showProjects(params[0]);
+                break;
+            }
+            case StartProject: {
+                startProjectMenu();
+                break;
             }
             default: {
-
+                break;
             }
         }
     }
@@ -138,6 +192,16 @@ public class GuiWin {
 
         button_start.setPreferredSize(_dimension);
         button_list.setPreferredSize(_dimension);
+
+        button_start.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                _gui.setVisible(false);
+                _gui.dispose();
+                _gui = null;
+
+                new GuiWin(Mod.StartProject, new String[0]);
+            }
+        });
 
         button_list.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

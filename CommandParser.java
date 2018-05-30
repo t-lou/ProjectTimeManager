@@ -112,7 +112,7 @@ public class CommandParser {
      *
      * @param project_name The name of project to start.
      */
-    private static void startProject(String project_name) {
+    public static void startProject(String project_name) {
         ProjectManager project = new ProjectManager(project_name);
         project.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
