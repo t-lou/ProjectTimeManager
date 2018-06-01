@@ -1,11 +1,13 @@
 import java.io.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 class Interval {
     /**
@@ -63,6 +65,15 @@ class Interval {
      */
     public LocalDateTime getStartTime() {
         return _time_start;
+    }
+
+    /**
+     * Get the starting time.
+     *
+     * @return The starting time.
+     */
+    public LocalDateTime getEndTime() {
+        return _time_end;
     }
 
     public Interval(String text) {
@@ -133,6 +144,26 @@ public class TimeLogManager {
     }
 
     /**
+     * Checks whether the time logs are ordered, incl. whehther all intervals have later end time and whether the
+     * starting time of one interval is later than the ending time of the earlier ones.
+     * @return
+     */
+    private boolean areLogsOrdered() {
+        if (_time_entries.isEmpty()) {
+            return true;
+        } else {
+            ArrayList<Long> all_time_ms = new ArrayList<>();
+            for (final Interval interval : _time_entries) {
+                all_time_ms.add(interval.getStartTime().toEpochSecond(ZoneOffset.UTC));
+                all_time_ms.add(interval.getEndTime().toEpochSecond(ZoneOffset.UTC));
+            }
+
+            return IntStream.range(1, all_time_ms.size()).
+                    allMatch(i -> all_time_ms.get(i) > all_time_ms.get(i - 1));
+        }
+    }
+
+    /**
      * Read the time entries which are stored in the file with given filename.
      *
      * @param filename The filename of the logging file.
@@ -168,6 +199,12 @@ public class TimeLogManager {
                 // somewhere problem occurs
                 _log.log(Level.SEVERE, ex.getMessage());
                 return false;
+            }
+
+            if (!areLogsOrdered())
+
+            {
+                _log.severe("Logs are not aligned.");
             }
 
             return true;
