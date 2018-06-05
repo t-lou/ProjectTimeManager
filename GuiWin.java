@@ -20,7 +20,7 @@ public class GuiWin {
 
     final static private int _width_per_unit = 400;
     final static private int _height_per_unit = 100;
-    final static private int _height_overhead = 10;
+    final static private int _size_overhead = 10;
 
     final static private Color _colour_background = Color.GRAY;
     final static private Color _colour_foreground = Color.WHITE;
@@ -29,12 +29,31 @@ public class GuiWin {
     private JFrame _gui;
 
     final static private Dimension _dimension = new Dimension(
-            _width_per_unit,
-            _height_per_unit - _height_overhead);
+            _width_per_unit, _height_per_unit - _size_overhead);
+
+    final static private Dimension _dimension_gui = new Dimension(
+            _width_per_unit + _size_overhead * 2, _height_per_unit * 3 - _size_overhead * 2);
 
     static private void setButtonColour(JButton button) {
         button.setBackground(_colour_background);
         button.setForeground(_colour_foreground);
+    }
+
+    private void destroyGui() {
+        _gui.setVisible(false);
+        _gui.dispose();
+        _gui = null;
+    }
+
+    private void addPanelToGui(JPanel panel) {
+        final JScrollPane scrollable = new JScrollPane(panel);
+        scrollable.setPreferredSize(_dimension_gui);
+        _gui.add(scrollable);
+    }
+
+    private void prepareGui() {
+        _gui.pack();
+        _gui.setVisible(true);
     }
 
     private void showProjectList() {
@@ -61,9 +80,7 @@ public class GuiWin {
 
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    _gui.setVisible(false);
-                    _gui.dispose();
-                    _gui = null;
+                    destroyGui();
 
                     new GuiWin(Mod.ShowPorject, new String[]{project_name});
                 }
@@ -72,10 +89,9 @@ public class GuiWin {
             panel.add(button);
         }
 
-        _gui.add(panel);
+        addPanelToGui(panel);
 
-        _gui.pack();
-        _gui.setVisible(true);
+        prepareGui();
     }
 
     private void showProjects(String project_name) {
@@ -118,10 +134,9 @@ public class GuiWin {
 
         panel.add(label);
 
-        _gui.add(panel);
+        addPanelToGui(panel);
 
-        _gui.pack();
-        _gui.setVisible(true);
+        prepareGui();
     }
 
     private void startProjectMenu() {
@@ -140,9 +155,7 @@ public class GuiWin {
         field.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                _gui.setVisible(false);
-                _gui.dispose();
-                _gui = null;
+                destroyGui();
 
                 CommandParser.startProject(field.getText());
             }
@@ -168,10 +181,9 @@ public class GuiWin {
             panel.add(button);
         }
 
-        _gui.add(panel);
+        addPanelToGui(panel);
 
-        _gui.pack();
-        _gui.setVisible(true);
+        prepareGui();
     }
 
     public GuiWin(Mod mod, String[] params) {
@@ -212,9 +224,7 @@ public class GuiWin {
 
         button_start.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                _gui.setVisible(false);
-                _gui.dispose();
-                _gui = null;
+                destroyGui();
 
                 new GuiWin(Mod.StartProject, new String[0]);
             }
@@ -222,9 +232,7 @@ public class GuiWin {
 
         button_list.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                _gui.setVisible(false);
-                _gui.dispose();
-                _gui = null;
+                destroyGui();
 
                 new GuiWin(Mod.ListProject, new String[0]);
             }
@@ -238,10 +246,9 @@ public class GuiWin {
         panel.add(button_start);
         panel.add(button_list);
 
-        _gui.add(panel);
+        addPanelToGui(panel);
 
-        _gui.pack();
-        _gui.setVisible(true);
+        prepareGui();
     }
 
 }
