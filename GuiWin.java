@@ -19,14 +19,23 @@ public class GuiWin {
     }
 
     final static private int _width_per_unit = 400;
-    final static private int _height_per_unit = 150;
+    final static private int _height_per_unit = 100;
     final static private int _height_overhead = 10;
+
+    final static private Color _colour_background = Color.GRAY;
+    final static private Color _colour_foreground = Color.WHITE;
+    final static private Color _colour_boundary = Color.LIGHT_GRAY;
 
     private JFrame _gui;
 
     final static private Dimension _dimension = new Dimension(
             _width_per_unit,
             _height_per_unit - _height_overhead);
+
+    static private void setButtonColour(JButton button) {
+        button.setBackground(_colour_background);
+        button.setForeground(_colour_foreground);
+    }
 
     private void showProjectList() {
         assert _gui == null : "GUI occupied.";
@@ -39,6 +48,7 @@ public class GuiWin {
 
         final ArrayList<String> project_names = new ProjectManager().getListProject();
 
+        panel.setBackground(_colour_boundary);
         panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * project_names.size()));
 
         for (final String project_name : project_names) {
@@ -46,6 +56,7 @@ public class GuiWin {
                     Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs()));
             final JButton button = new JButton(text);
 
+            setButtonColour(button);
             button.setPreferredSize(_dimension);
 
             button.addActionListener(new ActionListener() {
@@ -75,6 +86,7 @@ public class GuiWin {
 
         final JPanel panel = new JPanel();
 
+        panel.setBackground(_colour_boundary);
         panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit));
 
         final ProjectManager pm = new ProjectManager(project_name);
@@ -119,6 +131,7 @@ public class GuiWin {
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final JPanel panel = new JPanel();
+        panel.setBackground(_colour_boundary);
         panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * (project_names.size() + 1)));
 
         final JTextField field = new JTextField();
@@ -139,6 +152,7 @@ public class GuiWin {
         for (final String project_name : project_names) {
             final JButton button = new JButton(project_name);
 
+            setButtonColour(button);
             button.setPreferredSize(_dimension);
 
             button.addActionListener(new ActionListener() {
@@ -190,6 +204,9 @@ public class GuiWin {
         final JButton button_start = new JButton("START");
         final JButton button_list = new JButton("LIST");
 
+        setButtonColour(button_start);
+        setButtonColour(button_list);
+
         button_start.setPreferredSize(_dimension);
         button_list.setPreferredSize(_dimension);
 
@@ -215,6 +232,7 @@ public class GuiWin {
 
         final JPanel panel = new JPanel();
 
+        panel.setBackground(_colour_boundary);
         panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 2));
 
         panel.add(button_start);
