@@ -1,12 +1,15 @@
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /// This class handles the projects.
 public class ProjectManager {
@@ -95,18 +98,47 @@ public class ProjectManager {
      *
      * @return A list of the available projects.
      */
-    public ArrayList<String> getListProject() {
-        ArrayList<String> filenames = new ArrayList<String>();
-
-        for (final File file : new File(_cache_path).listFiles()) {
-            String filename = file.getName();
-            int pos_point = filename.lastIndexOf(".");
-            filenames.add(filename.substring(0, pos_point));
-        }
+    public static ArrayList<String> getListProject() {
+        ArrayList<String> filenames = Arrays.stream(new File(_cache_path).listFiles())
+                .map(File::getName)
+                .filter(filename -> filename.lastIndexOf(_extension) == (filename.length() - _extension.length()))
+                .map(filename -> filename.substring(0, filename.lastIndexOf(_extension)))
+                .collect(Collectors.toCollection(ArrayList::new));
 
         Collections.sort(filenames);
 
         return filenames;
+    }
+
+    /**
+     * Get the projects which involve given date.
+     *
+     * @return A list of projects which involve given date.
+     */
+    public static ArrayList<String> getListProjectWithData(Instant date) {
+        final Long time_start = date.getEpochSecond() / (24L * 3600L);
+
+        return getListProject().stream()
+                .filter(project_name -> new ProjectManager(project_name).getGroupedLog().keySet().contains(time_start))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    /**
+     * Get all available dates.
+     *
+     * @return List of available dates.
+     */
+    public static ArrayList<Instant> getListDates() {
+        ArrayList<Long> dates = new ArrayList<>(getListProject().stream()
+                .map(project_name -> new ProjectManager(project_name).getGroupedLog().keySet())
+                .flatMap(set -> set.stream())
+                .collect(Collectors.toSet()));
+
+        Collections.sort(dates);
+
+        return dates.stream()
+                .map(date -> Instant.ofEpochSecond(date * 24L * 3600L))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**

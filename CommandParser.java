@@ -21,6 +21,10 @@ public class CommandParser {
         System.out.println("\tList all logs of wanted project, grouped with the starting date of each log.");
         System.out.println("start PROJECT_NAME");
         System.out.println("\tStart one project. If this project is not found, a confirmation is needed.");
+        System.out.println("date");
+        System.out.println("\tList the dates of all on-going projects.");
+        System.out.println("x");
+        System.out.println("\tStart the GUI.");
     }
 
     /**
@@ -42,9 +46,8 @@ public class CommandParser {
      * List all on-going projects and elapsed time.
      */
     public static void listProjects() {
-        final ProjectManager pm = new ProjectManager();
         System.out.println("The recorded projects:");
-        for (final String project_name : pm.getListProject()) {
+        for (final String project_name : ProjectManager.getListProject()) {
             final Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
 
             System.out.println(project_name);
@@ -103,7 +106,8 @@ public class CommandParser {
      * @return Whether all given projects are available.
      */
     public static boolean areProjectsAllAvailable(String[] project_names) {
-        return !Arrays.stream(project_names).map(ProjectManager::isProjectAvailable)
+        return !Arrays.stream(project_names)
+                .map(ProjectManager::isProjectAvailable)
                 .collect(Collectors.toList()).contains(false);
     }
 
@@ -165,7 +169,7 @@ public class CommandParser {
                 if (command.length == 1) {
                     listProjects();
                 } else if ((command.length == 2) && command[1].equals("*")) {
-                    listProjectsLog(new ProjectManager().getListProject().toArray(new String[1]));
+                    listProjectsLog(ProjectManager.getListProject().toArray(new String[1]));
                 } else {
                     final String[] project_names = Arrays.copyOfRange(command, 1, command.length);
                     if (areProjectsAllAvailable(project_names)) {
@@ -188,6 +192,14 @@ public class CommandParser {
                     System.out.println("Not all given names are found, the project include:");
                     listProjects();
                 }
+                break;
+            }
+            case "date": {
+                final ArrayList<Instant> dates = ProjectManager.getListDates();
+                if (command.length == 1) {
+                    dates.stream().forEach(date -> System.out.println(date.toString().split("T")[0]));
+                }
+                // todo list a date
                 break;
             }
             case "x": {
