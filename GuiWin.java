@@ -337,7 +337,7 @@ public class GuiWin {
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final JButton button_start = new JButton("START");
-        final JButton button_list = new JButton("LIST");
+        final JButton button_list = new JButton("PROJECTS");
         final JButton button_date = new JButton("DATE");
 
         setButtonColour(button_start);

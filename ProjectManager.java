@@ -135,6 +135,7 @@ public class ProjectManager {
                 .collect(Collectors.toSet()));
 
         Collections.sort(dates);
+        Collections.reverse(dates);
 
         return dates.stream()
                 .map(date -> Instant.ofEpochSecond(date * 24L * 3600L))
