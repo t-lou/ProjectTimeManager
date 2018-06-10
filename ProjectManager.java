@@ -167,8 +167,8 @@ public class ProjectManager {
      *
      * @return Total time of this project in millisecond.
      */
-    public long getTotalTimeMs() {
-        return _log_manager.getTotalTimeMs();
+    public long getTotalTimeMs(ArrayList<Instant> dates) {
+        return _log_manager.getTotalTimeMs(dates);
     }
 
     /**

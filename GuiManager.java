@@ -7,10 +7,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
-public class GuiWin {
+public class GuiManager {
     /**
      * The enum for initialization of GUI.
      */
@@ -112,7 +114,7 @@ public class GuiWin {
      * Show the list of all possible projects.
      */
     private void showProjectList() {
-        showProjectList(ProjectManager.getListProject());
+        showProjectList(ProjectManager.getListProject(), null);
     }
 
     /**
@@ -120,7 +122,7 @@ public class GuiWin {
      *
      * @param project_names Names of the given projects.
      */
-    private void showProjectList(ArrayList<String> project_names) {
+    private void showProjectList(ArrayList<String> project_names, ArrayList<Instant> dates) {
         assert _gui == null : "GUI occupied.";
 
         _gui = new JFrame("List of Projects");
@@ -134,7 +136,7 @@ public class GuiWin {
 
         for (final String project_name : project_names) {
             final String text = project_name + ": " + CommandParser.getTextForDuration(
-                    Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs()));
+                    Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(dates)));
             final JButton button = new JButton(text);
 
             setButtonColour(button);
@@ -144,7 +146,7 @@ public class GuiWin {
                 public void actionPerformed(ActionEvent e) {
                     destroyGui();
 
-                    new GuiWin(Mod.ShowPorject, new String[]{project_name});
+                    new GuiManager(Mod.ShowPorject, new String[]{project_name});
                 }
             });
 
@@ -178,6 +180,7 @@ public class GuiWin {
         ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet());
         Collections.sort(keys);
 
+        final String eol = "<br/>";
         String text = "<html>";
 
         for (final Long day : keys) {
@@ -186,18 +189,19 @@ public class GuiWin {
             final long duration_ms = grouped_log.get(day).stream().map(Interval::getDurationMs)
                     .mapToLong(l -> l).sum();
 
-            text += ": " + CommandParser.getTextForDuration(Duration.ofMillis(duration_ms)) + "<br/>";
+            text += ": " + CommandParser.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
 
-            for (Interval interval : grouped_log.get(day)) {
-                text += "  " + interval.formatDateTime() + "<br/>";
-            }
+            text += String.join(eol,
+                    grouped_log.get(day).stream()
+                            .map(interval -> interval.formatDateTime())
+                            .collect(Collectors.toList()));
 
-            text += "<br/>";
+            text += eol + eol;
         }
 
         text += "</html>";
 
-        JLabel label = new JLabel(text);
+        final JLabel label = new JLabel(text);
 
         panel.add(label);
 
@@ -279,12 +283,17 @@ public class GuiWin {
                 public void actionPerformed(ActionEvent e) {
                     destroyGui();
 
+                    final String template = "yyyy-MM-dd HH:mm:ss";
+
                     final String string_date = button.getText() + " 00:00:00";
-                    final Long date = LocalDateTime.parse(string_date, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    final Long date_days = LocalDateTime.parse(string_date, DateTimeFormatter.ofPattern(template))
                             .toLocalDate()
                             .toEpochDay();
+                    final Instant date = Instant.ofEpochSecond(date_days * 24L * 3600L);
 
-                    showProjectList(ProjectManager.getListProjectWithData(Instant.ofEpochSecond(date * 24L * 3600L)));
+                    showProjectList(
+                            ProjectManager.getListProjectWithData(date),
+                            new ArrayList<>(Arrays.asList(new Instant[] {date})));
                 }
             });
 
@@ -299,10 +308,10 @@ public class GuiWin {
     /**
      * The constructor for specific module.
      *
-     * @param mod Enum for the module.
+     * @param mod    Enum for the module.
      * @param params Further parameters.
      */
-    public GuiWin(Mod mod, String[] params) {
+    public GuiManager(Mod mod, String[] params) {
         switch (mod) {
             case ListProject: {
                 showProjectList();
@@ -330,7 +339,7 @@ public class GuiWin {
     /**
      * Create the main GUI.
      */
-    public GuiWin() {
+    public GuiManager() {
         assert _gui == null : "GUI occupied.";
 
         _gui = new JFrame("Project Time Manager");
@@ -352,7 +361,7 @@ public class GuiWin {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
 
-                new GuiWin(Mod.StartProject, new String[0]);
+                new GuiManager(Mod.StartProject, null);
             }
         });
 
@@ -360,7 +369,7 @@ public class GuiWin {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
 
-                new GuiWin(Mod.ListProject, new String[0]);
+                new GuiManager(Mod.ListProject, null);
             }
         });
 
@@ -368,7 +377,7 @@ public class GuiWin {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
 
-                new GuiWin(Mod.ListDates, new String[0]);
+                new GuiManager(Mod.ListDates, null);
             }
         });
 

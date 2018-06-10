@@ -1,10 +1,12 @@
 import java.io.*;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
@@ -229,8 +231,13 @@ public class TimeLogManager {
      *
      * @return The total elapsed time of all logped intervals in millisecond.
      */
-    public long getTotalTimeMs() {
-        return _time_entries.stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
+    public long getTotalTimeMs(ArrayList<Instant> date) {
+//        Function<ArrayList<Instant>, Boolean>;
+
+        return _time_entries.stream()
+                .map(Interval::getDurationMs)
+                .mapToLong(l -> l)
+                .sum();
     }
 
     /**

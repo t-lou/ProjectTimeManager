@@ -48,7 +48,7 @@ public class CommandParser {
     public static void listProjects() {
         System.out.println("The recorded projects:");
         for (final String project_name : ProjectManager.getListProject()) {
-            final Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs());
+            final Duration duration = Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(null));
 
             System.out.println(project_name);
             System.out.println("\t" + getTextForDuration(duration));
@@ -137,7 +137,7 @@ public class CommandParser {
     }
 
     private static void startGui() {
-        new GuiWin();
+        new GuiManager();
     }
 
     /**
