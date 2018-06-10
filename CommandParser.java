@@ -64,11 +64,11 @@ public class CommandParser {
         final ProjectManager pm = new ProjectManager(project_name);
         final HashMap<Long, ArrayList<Interval>> grouped_log = pm.getGroupedLog();
 
-        ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet());
-        Collections.sort(keys);
+        final ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet()).stream().
+                sorted().collect(Collectors.toCollection(ArrayList::new));
 
         for (final Long day : keys) {
-            final String full_text_date = Instant.ofEpochSecond(day * 24L * 3600L).toString();
+            final String full_text_date = Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString();
 
             final long duration_ms = grouped_log.get(day).stream().map(Interval::getDurationMs)
                     .mapToLong(l -> l).sum();

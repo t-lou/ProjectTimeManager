@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -77,7 +76,7 @@ public class GuiManager {
      *
      * @param button The button to paint.
      */
-    static private void setButtonColour(JButton button) {
+    static private void setButtonColour(final JButton button) {
         button.setBackground(_colour_background);
         button.setForeground(_colour_foreground);
     }
@@ -96,7 +95,7 @@ public class GuiManager {
      *
      * @param panel The panel to add.
      */
-    private void addPanelToGui(JPanel panel) {
+    private void addPanelToGui(final JPanel panel) {
         final JScrollPane scrollable = new JScrollPane(panel);
         scrollable.setPreferredSize(_dimension_gui);
         _gui.add(scrollable);
@@ -122,7 +121,7 @@ public class GuiManager {
      *
      * @param project_names Names of the given projects.
      */
-    private void showProjectList(ArrayList<String> project_names, ArrayList<Instant> dates) {
+    private void showProjectList(final ArrayList<String> project_names, final ArrayList<Instant> dates) {
         assert _gui == null : "GUI occupied.";
 
         _gui = new JFrame("List of Projects");
@@ -146,7 +145,7 @@ public class GuiManager {
                 public void actionPerformed(ActionEvent e) {
                     destroyGui();
 
-                    new GuiManager(Mod.ShowPorject, new String[]{project_name});
+                    showProject(project_name, dates);
                 }
             });
 
@@ -163,7 +162,7 @@ public class GuiManager {
      *
      * @param project_name The name of The project.
      */
-    private void showProject(String project_name) {
+    private void showProject(final String project_name, ArrayList<Instant> preferred_dates) {
         assert _gui == null : "GUI occupied.";
 
         _gui = new JFrame("More on Project " + project_name);
@@ -173,18 +172,25 @@ public class GuiManager {
 
         panel.setBackground(_colour_boundary);
 
-        final ProjectManager pm = new ProjectManager(project_name);
         // todo check the existance of project.
-        final HashMap<Long, ArrayList<Interval>> grouped_log = pm.getGroupedLog();
+        final HashMap<Long, ArrayList<Interval>> grouped_log = new ProjectManager(project_name).getGroupedLog();
 
-        ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet());
-        Collections.sort(keys);
+        final ArrayList<Instant> dates = (preferred_dates != null) ? preferred_dates : ProjectManager.getListDates();
+
+        final ArrayList<Long> dates_as_key = dates.stream()
+                .map(date -> (date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        final ArrayList<Long> keys = new ArrayList<>(grouped_log.keySet()).stream()
+                .filter(date -> dates_as_key.contains(date))
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new));
 
         final String eol = "<br/>";
         String text = "<html>";
 
         for (final Long day : keys) {
-            text += Instant.ofEpochSecond(day * 24L * 3600L).toString().split("T")[0];
+            text += Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString().split("T")[0];
 
             final long duration_ms = grouped_log.get(day).stream().map(Interval::getDurationMs)
                     .mapToLong(l -> l).sum();
@@ -201,9 +207,7 @@ public class GuiManager {
 
         text += "</html>";
 
-        final JLabel label = new JLabel(text);
-
-        panel.add(label);
+        panel.add(new JLabel(text));
 
         addPanelToGui(panel);
 
@@ -214,7 +218,7 @@ public class GuiManager {
      * Show the main manu for starting one project, either available or new.
      */
     private void startProjectMenu() {
-        final ArrayList<String> project_names = new ProjectManager().getListProject();
+        final ArrayList<String> project_names = ProjectManager.getListProject();
 
         _gui = new JFrame("Choose Project to Start");
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -262,8 +266,10 @@ public class GuiManager {
     /**
      * Create the GUI for selecting the date to show.
      */
-    private void startDateMenu() {
-        final ArrayList<Instant> dates = ProjectManager.getListDates();
+    private void startDateMenu(ArrayList<Instant> dates) {
+        if (dates == null) {
+            dates = ProjectManager.getListDates();
+        }
 
         _gui = new JFrame("Choose date to inquire");
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -286,14 +292,13 @@ public class GuiManager {
                     final String template = "yyyy-MM-dd HH:mm:ss";
 
                     final String string_date = button.getText() + " 00:00:00";
-                    final Long date_days = LocalDateTime.parse(string_date, DateTimeFormatter.ofPattern(template))
-                            .toLocalDate()
-                            .toEpochDay();
-                    final Instant date = Instant.ofEpochSecond(date_days * 24L * 3600L);
+                    final Instant date = Instant.ofEpochSecond(
+                            TimeLogManager.getSecondStartOfDay(
+                                    LocalDateTime.parse(string_date, DateTimeFormatter.ofPattern(template))));
 
                     showProjectList(
                             ProjectManager.getListProjectWithData(date),
-                            new ArrayList<>(Arrays.asList(new Instant[] {date})));
+                            new ArrayList<>(Arrays.asList(new Instant[]{date})));
                 }
             });
 
@@ -311,7 +316,7 @@ public class GuiManager {
      * @param mod    Enum for the module.
      * @param params Further parameters.
      */
-    public GuiManager(Mod mod, String[] params) {
+    public GuiManager(final Mod mod, final String[] params) {
         switch (mod) {
             case ListProject: {
                 showProjectList();
@@ -319,7 +324,7 @@ public class GuiManager {
             }
             case ShowPorject: {
                 assert params.length == 1;
-                showProject(params[0]);
+                showProject(params[0], null);
                 break;
             }
             case StartProject: {
@@ -327,7 +332,7 @@ public class GuiManager {
                 break;
             }
             case ListDates: {
-                startDateMenu();
+                startDateMenu(null);
                 break;
             }
             default: {

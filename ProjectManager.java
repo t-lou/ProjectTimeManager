@@ -116,7 +116,7 @@ public class ProjectManager {
      * @return A list of projects which involve given date.
      */
     public static ArrayList<String> getListProjectWithData(Instant date) {
-        final Long time_start = date.getEpochSecond() / (24L * 3600L);
+        final Long time_start = date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY;
 
         return getListProject().stream()
                 .filter(project_name -> new ProjectManager(project_name).getGroupedLog().keySet().contains(time_start))
@@ -138,7 +138,7 @@ public class ProjectManager {
         Collections.reverse(dates);
 
         return dates.stream()
-                .map(date -> Instant.ofEpochSecond(date * 24L * 3600L))
+                .map(date -> Instant.ofEpochSecond(date * TimeLogManager.SECONDS_PER_DAY))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 

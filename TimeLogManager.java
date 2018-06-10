@@ -6,9 +6,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Function;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class Interval {
@@ -78,6 +77,7 @@ class Interval {
         return _time_end;
     }
 
+
     public Interval(String text) {
         final String[] slices = text.split(" - ");
 
@@ -110,6 +110,21 @@ public class TimeLogManager {
     private LocalDateTime _time_start;
 
     /**
+     * The number of seconds in one day.
+     */
+    public static final long SECONDS_PER_DAY = 24L * 3600L;
+
+    /**
+     * Get the starting second of the date time.
+     *
+     * @param time Time.
+     * @return The starting second of the day.
+     */
+    public static long getSecondStartOfDay(final LocalDateTime time) {
+        return time.toLocalDate().toEpochDay() * SECONDS_PER_DAY;
+    }
+
+    /**
      * Write the recorded time entries to file with given filename.
      *
      * @param filename The given filename.
@@ -134,13 +149,13 @@ public class TimeLogManager {
 
             br.close();
 
-            _log.log(Level.INFO, "Wrote " + _time_entries.size() + " time entries.");
+            _log.info("Wrote " + _time_entries.size() + " time entries.");
 
             // this file is supposed to be finished, clear the cached timestamps
             _time_entries.clear();
 
         } catch (Exception ex) {
-            _log.log(Level.SEVERE, ex.getMessage());
+            _log.severe(ex.getMessage());
         }
 
     }
@@ -148,6 +163,7 @@ public class TimeLogManager {
     /**
      * Checks whether the time logs are ordered, incl. whehther all intervals have later end time and whether the
      * starting time of one interval is later than the ending time of the earlier ones.
+     *
      * @return
      */
     private boolean areLogsOrdered() {
@@ -180,14 +196,11 @@ public class TimeLogManager {
         if (file.canRead()) {
             // file is available, try to read and parse
             try {
+                final FileInputStream in_stream = new FileInputStream(file);
+                final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
 
-                FileInputStream in_stream = new FileInputStream(file);
-
-                BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
-
-                String line;
                 while (true) {
-                    line = br.readLine();
+                    final String line = br.readLine();
 
                     if (line == null || line.equals("")) {
                         break;
@@ -199,7 +212,7 @@ public class TimeLogManager {
                 br.close();
             } catch (Exception ex) {
                 // somewhere problem occurs
-                _log.log(Level.SEVERE, ex.getMessage());
+                _log.severe(ex.getMessage());
                 return false;
             }
 
@@ -212,7 +225,7 @@ public class TimeLogManager {
             return true;
         } else {
             // file not available
-            _log.log(Level.SEVERE, "Logging file " + filename + " not found.");
+            _log.severe("Logging file " + filename + " not found.");
             return false;
         }
     }
@@ -223,7 +236,25 @@ public class TimeLogManager {
     public void addNow() {
         _time_start = LocalDateTime.now();
         // record this timestamp
-        _log.log(Level.INFO, "Added now as starting time " + _time_start.toString());
+        _log.info("Added now as starting time " + _time_start.toString());
+    }
+
+    /**
+     * Check whether interval is on one of the given dates. If dates is not given, then return false;
+     *
+     * @param interval The interval to check.
+     * @param dates    The list of dates.
+     * @return Whether the dates are given and the interval is on one of the dates.
+     */
+    public static boolean isIntervalOnDates(Interval interval, ArrayList<Instant> dates) {
+        if (dates == null || dates.isEmpty()) {
+            return false;
+        } else {
+            return dates.stream()
+                    .map(Instant::getEpochSecond)
+                    .collect(Collectors.toList())
+                    .contains(getSecondStartOfDay(interval.getStartTime()));
+        }
     }
 
     /**
@@ -231,13 +262,19 @@ public class TimeLogManager {
      *
      * @return The total elapsed time of all logped intervals in millisecond.
      */
-    public long getTotalTimeMs(ArrayList<Instant> date) {
-//        Function<ArrayList<Instant>, Boolean>;
-
-        return _time_entries.stream()
-                .map(Interval::getDurationMs)
-                .mapToLong(l -> l)
-                .sum();
+    public long getTotalTimeMs(ArrayList<Instant> dates) {
+        if (dates == null || dates.isEmpty()) {
+            return _time_entries.stream()
+                    .map(Interval::getDurationMs)
+                    .mapToLong(l -> l)
+                    .sum();
+        } else {
+            return _time_entries.stream()
+                    .filter(interval -> isIntervalOnDates(interval, dates))
+                    .map(Interval::getDurationMs)
+                    .mapToLong(l -> l)
+                    .sum();
+        }
     }
 
     /**
