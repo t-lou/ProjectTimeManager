@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -12,16 +14,6 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 public class GuiManager {
-    /**
-     * The enum for initialization of GUI.
-     */
-    private enum Mod {
-        StartProject,
-        ListProject,
-        ShowPorject,
-        ListDates
-    }
-
     /**
      * Width of one unit (button or text field).
      */
@@ -117,15 +109,33 @@ public class GuiManager {
     }
 
     /**
+     * Add mouse action: right click the empty space and return to root menu.
+     *
+     * @param panel The panel to change.
+     */
+    private void addRightButtonReturn(final JPanel panel) {
+        panel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    destroyGui();
+                    mainMenu();
+                }
+            }
+        });
+    }
+
+    /**
      * Show the given projects.
      *
      * @param project_names Names of the given projects.
      */
     private void showProjectList(final ArrayList<String> project_names, final ArrayList<Instant> dates) {
-        assert _gui == null : "GUI occupied.";
+        if (_gui != null) {
+            destroyGui();
+        }
 
         _gui = new JFrame("List of Projects");
-
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final JPanel panel = new JPanel();
@@ -143,8 +153,6 @@ public class GuiManager {
 
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    destroyGui();
-
                     showProject(project_name, dates);
                 }
             });
@@ -152,6 +160,7 @@ public class GuiManager {
             panel.add(button);
         }
 
+        addRightButtonReturn(panel);
         addPanelToGui(panel);
 
         prepareGui();
@@ -163,7 +172,9 @@ public class GuiManager {
      * @param project_name The name of The project.
      */
     private void showProject(final String project_name, ArrayList<Instant> preferred_dates) {
-        assert _gui == null : "GUI occupied.";
+        if (_gui != null) {
+            destroyGui();
+        }
 
         _gui = new JFrame("More on Project " + project_name);
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -209,6 +220,7 @@ public class GuiManager {
 
         panel.add(new JLabel(text));
 
+        addRightButtonReturn(panel);
         addPanelToGui(panel);
 
         prepareGui();
@@ -218,6 +230,10 @@ public class GuiManager {
      * Show the main manu for starting one project, either available or new.
      */
     private void startProjectMenu() {
+        if (_gui != null) {
+            destroyGui();
+        }
+
         final ArrayList<String> project_names = ProjectManager.getListProject();
 
         _gui = new JFrame("Choose Project to Start");
@@ -258,6 +274,7 @@ public class GuiManager {
             panel.add(button);
         }
 
+        addRightButtonReturn(panel);
         addPanelToGui(panel);
 
         prepareGui();
@@ -267,6 +284,10 @@ public class GuiManager {
      * Create the GUI for selecting the date to show.
      */
     private void startDateMenu(ArrayList<Instant> dates) {
+        if (_gui != null) {
+            destroyGui();
+        }
+
         if (dates == null) {
             dates = ProjectManager.getListDates();
         }
@@ -287,8 +308,6 @@ public class GuiManager {
 
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    destroyGui();
-
                     final String template = "yyyy-MM-dd HH:mm:ss";
 
                     final String string_date = button.getText() + " 00:00:00";
@@ -305,16 +324,16 @@ public class GuiManager {
             panel.add(button);
         }
 
+        addRightButtonReturn(panel);
         addPanelToGui(panel);
 
         prepareGui();
     }
 
-    /**
-     * Create the main GUI.
-     */
-    public GuiManager() {
-        assert _gui == null : "GUI occupied.";
+    private void mainMenu() {
+        if (_gui != null) {
+            destroyGui();
+        }
 
         _gui = new JFrame("Project Time Manager");
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -333,21 +352,18 @@ public class GuiManager {
 
         button_start.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                destroyGui();
                 startProjectMenu();
             }
         });
 
         button_list.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                destroyGui();
                 showProjectList();
             }
         });
 
         button_date.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                destroyGui();
                 startDateMenu(null);
             }
         });
@@ -366,4 +382,10 @@ public class GuiManager {
         prepareGui();
     }
 
+    /**
+     * Create the main GUI.
+     */
+    public GuiManager() {
+        mainMenu();
+    }
 }

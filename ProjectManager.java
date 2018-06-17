@@ -111,15 +111,13 @@ public class ProjectManager {
      */
     public static ArrayList<String> getListProject() {
         prepareDirectory();
-        ArrayList<String> filenames = Arrays.stream(new File(_cache_path).listFiles())
+
+        return Arrays.stream(new File(_cache_path).listFiles())
                 .map(File::getName)
                 .filter(filename -> filename.lastIndexOf(_extension) == (filename.length() - _extension.length()))
                 .map(filename -> filename.substring(0, filename.lastIndexOf(_extension)))
+                .sorted()
                 .collect(Collectors.toCollection(ArrayList::new));
-
-        Collections.sort(filenames);
-
-        return filenames;
     }
 
     /**
@@ -141,17 +139,13 @@ public class ProjectManager {
      * @return List of available dates.
      */
     public static ArrayList<Instant> getListDates() {
-        ArrayList<Long> dates = new ArrayList<>(getListProject().stream()
+        return new ArrayList<>(getListProject().stream()
                 .map(project_name -> new ProjectManager(project_name).getGroupedLog().keySet())
                 .flatMap(set -> set.stream())
-                .collect(Collectors.toSet()));
-
-        Collections.sort(dates);
-        Collections.reverse(dates);
-
-        return dates.stream()
+                .distinct()
+                .sorted(Collections.reverseOrder())
                 .map(date -> Instant.ofEpochSecond(date * TimeLogManager.SECONDS_PER_DAY))
-                .collect(Collectors.toCollection(ArrayList::new));
+                .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     /**
@@ -222,6 +216,7 @@ public class ProjectManager {
         }
 
         _log_manager.updateLog(_filename);
+
         new File(_path_lock).delete();
     }
 
