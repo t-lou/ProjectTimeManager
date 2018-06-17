@@ -311,37 +311,6 @@ public class GuiManager {
     }
 
     /**
-     * The constructor for specific module.
-     *
-     * @param mod    Enum for the module.
-     * @param params Further parameters.
-     */
-    public GuiManager(final Mod mod, final String[] params) {
-        switch (mod) {
-            case ListProject: {
-                showProjectList();
-                break;
-            }
-            case ShowPorject: {
-                assert params.length == 1;
-                showProject(params[0], null);
-                break;
-            }
-            case StartProject: {
-                startProjectMenu();
-                break;
-            }
-            case ListDates: {
-                startDateMenu(null);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-
-    /**
      * Create the main GUI.
      */
     public GuiManager() {
@@ -365,24 +334,21 @@ public class GuiManager {
         button_start.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
-
-                new GuiManager(Mod.StartProject, null);
+                startProjectMenu();
             }
         });
 
         button_list.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
-
-                new GuiManager(Mod.ListProject, null);
+                showProjectList();
             }
         });
 
         button_date.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 destroyGui();
-
-                new GuiManager(Mod.ListDates, null);
+                startDateMenu(null);
             }
         });
 

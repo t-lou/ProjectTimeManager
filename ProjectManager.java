@@ -55,6 +55,17 @@ public class ProjectManager {
     }
 
     /**
+     * Checks the existence directory for data and create if not exists.
+     */
+    private static void prepareDirectory() {
+        // if the directory for data is not availalble, create the directory.
+        final File file_cache_dir = new File(_cache_path);
+        if (!file_cache_dir.exists()) {
+            file_cache_dir.mkdirs();
+        }
+    }
+
+    /**
      * Checks whether the project with given name is available.
      *
      * @param project_name The name of consulted project.
@@ -99,6 +110,7 @@ public class ProjectManager {
      * @return A list of the available projects.
      */
     public static ArrayList<String> getListProject() {
+        prepareDirectory();
         ArrayList<String> filenames = Arrays.stream(new File(_cache_path).listFiles())
                 .map(File::getName)
                 .filter(filename -> filename.lastIndexOf(_extension) == (filename.length() - _extension.length()))
@@ -214,11 +226,7 @@ public class ProjectManager {
     }
 
     public ProjectManager() {
-        // if the directory for data is not availalble, create the directory.
-        final File file_cache_dir = new File(_cache_path);
-        if (!file_cache_dir.exists()) {
-            file_cache_dir.mkdirs();
-        }
+        prepareDirectory();
     }
 
     public ProjectManager(String project_name) {
