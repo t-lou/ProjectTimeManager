@@ -135,7 +135,14 @@ public class GuiManager {
             destroyGui();
         }
 
-        _gui = new JFrame("List of Projects");
+
+        final String title_date = (dates == null
+                ? ""
+                : (dates.stream()
+                .map(date -> date.toString())
+                .map(text -> text.substring(2, text.indexOf('T')))
+                .reduce("", (s, t) -> (" " + s + t))));
+        _gui = new JFrame("List of projects" + title_date);
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final JPanel panel = new JPanel();
