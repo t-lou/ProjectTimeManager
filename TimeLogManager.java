@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.Arrays;
+import java.util.List;
 
 class Interval {
     /**
@@ -191,7 +193,7 @@ public class TimeLogManager {
     public boolean readLog(String filename) {
         _time_entries.clear();
 
-        File file = new File(filename);
+        final File file = new File(filename);
 
         if (file.canRead()) {
             // file is available, try to read and parse
@@ -199,10 +201,11 @@ public class TimeLogManager {
                 final FileInputStream in_stream = new FileInputStream(file);
                 final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
 
+                final List<String> ends = Arrays.asList(new String[]{"", "\n", null});
                 while (true) {
                     final String line = br.readLine();
 
-                    if (line == null || line.equals("")) {
+                    if (ends.contains(line)) {
                         break;
                     }
 
@@ -216,9 +219,7 @@ public class TimeLogManager {
                 return false;
             }
 
-            if (!areLogsOrdered())
-
-            {
+            if (!areLogsOrdered()) {
                 _log.severe("Logs are not aligned.");
             }
 
