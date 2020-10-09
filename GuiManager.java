@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class GuiManager {
     /**
@@ -188,6 +189,25 @@ public class GuiManager {
         final JPanel panel = new JPanel();
 
         panel.setBackground(_colour_boundary);
+
+        final JButton button = initButton("EXPORT", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                destroyGui();
+
+                final JFileChooser chooser = new JFileChooser();
+                chooser.setFileFilter(new FileNameExtensionFilter("RTF", "rtf"));
+                chooser.showOpenDialog(null);
+
+                String filename = chooser.getSelectedFile().getAbsolutePath();
+                if (filename.length() <= 4 || !filename.substring(filename.length() - 4).equals(".rtf")) {
+                    filename += ".rtf";
+                }
+
+                new ProjectReporter(new ProjectManager(project_name).getLogManager()).output(filename);
+            }
+        });
+
+        panel.add(button);
 
         // todo check the existance of project.
         final HashMap<Long, ArrayList<Interval>> grouped_log = new ProjectManager(project_name).getGroupedLog();

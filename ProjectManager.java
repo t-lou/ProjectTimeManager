@@ -220,6 +220,10 @@ public class ProjectManager {
         new File(_path_lock).delete();
     }
 
+    public TimeLogManager getLogManager() {
+        return _log_manager;
+    }
+
     public ProjectManager() {
         prepareDirectory();
     }
