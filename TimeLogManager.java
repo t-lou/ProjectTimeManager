@@ -225,7 +225,7 @@ public class TimeLogManager {
         return Interval.getMonthId(LocalDateTime.now());
     }
 
-    public TimeLogManager(Logger log) {
+  public TimeLogManager(Logger log) {
         _log = log;
     }
 }
