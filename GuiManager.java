@@ -64,13 +64,17 @@ public class GuiManager {
             _height_per_unit * 5 - _size_overhead * 2);
 
     /**
-     * Set the colour of button, incl. background and foreground (font).
+     * Initialize button with text and predefined looks.
      *
-     * @param button The button to paint.
+     * @param text
      */
-    static private void setButtonColour(final JButton button) {
+    static private JButton initButton(final String text, final ActionListener action_listener) {
+        JButton button = new JButton(text);
         button.setBackground(_colour_background);
         button.setForeground(_colour_foreground);
+        button.setPreferredSize(_dimension);
+        button.addActionListener(action_listener);
+        return button;
     }
 
     /**
@@ -153,12 +157,7 @@ public class GuiManager {
         for (final String project_name : project_names) {
             final String text = project_name + ": " + CommandParser.getTextForDuration(
                     Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(dates)));
-            final JButton button = new JButton(text);
-
-            setButtonColour(button);
-            button.setPreferredSize(_dimension);
-
-            button.addActionListener(new ActionListener() {
+            final JButton button = initButton(text, new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     showProject(project_name, dates);
                 }
@@ -265,12 +264,7 @@ public class GuiManager {
         panel.add(field, BorderLayout.CENTER);
 
         for (final String project_name : project_names) {
-            final JButton button = new JButton(project_name);
-
-            setButtonColour(button);
-            button.setPreferredSize(_dimension);
-
-            button.addActionListener(new ActionListener() {
+            final JButton button = initButton(project_name, new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     destroyGui();
 
@@ -308,16 +302,11 @@ public class GuiManager {
 
         for (final Instant date : dates) {
             final String text_date = date.toString().split("T")[0];
-            final JButton button = new JButton(text_date);
-
-            setButtonColour(button);
-            button.setPreferredSize(_dimension);
-
-            button.addActionListener(new ActionListener() {
+            final JButton button = initButton(text_date, new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     final String template = "yyyy-MM-dd HH:mm:ss";
 
-                    final String string_date = button.getText() + " 00:00:00";
+                    final String string_date = text_date + " 00:00:00";
                     final Instant date = Instant.ofEpochSecond(
                             TimeLogManager.getSecondStartOfDay(
                                     LocalDateTime.parse(string_date, DateTimeFormatter.ofPattern(template))));
@@ -345,31 +334,22 @@ public class GuiManager {
         _gui = new JFrame("Project Time Manager");
         _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        final JButton button_start = new JButton("START");
-        final JButton button_list = new JButton("PROJECTS");
-        final JButton button_date = new JButton("DATE");
-
-        setButtonColour(button_start);
-        setButtonColour(button_list);
-        setButtonColour(button_date);
-
-        button_start.setPreferredSize(_dimension);
-        button_list.setPreferredSize(_dimension);
-        button_date.setPreferredSize(_dimension);
-
-        button_start.addActionListener(new ActionListener() {
+        final JButton button_checkin = initButton("CHECK IN", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 startProjectMenu();
             }
         });
-
-        button_list.addActionListener(new ActionListener() {
+        final JButton button_start = initButton("START", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startProjectMenu();
+            }
+        });
+        final JButton button_list = initButton("PROJECTS", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 showProjectList();
             }
         });
-
-        button_date.addActionListener(new ActionListener() {
+        final JButton button_date = initButton("DATE", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 startDateMenu(null);
             }
@@ -380,6 +360,7 @@ public class GuiManager {
         panel.setBackground(_colour_boundary);
         panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 2));
 
+        panel.add(button_checkin);
         panel.add(button_start);
         panel.add(button_list);
         panel.add(button_date);

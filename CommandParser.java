@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /// This class parses the command and input data.
+// TODO clean
 public class CommandParser {
     /**
      * Print help information.
@@ -132,83 +133,6 @@ public class CommandParser {
                 Thread.sleep(1000L);
             } catch (InterruptedException ex) {
                 System.out.println("Sleep interrupted! Check date time!");
-            }
-        }
-    }
-
-    private static void startGui() {
-        new GuiManager();
-    }
-
-    /**
-     * Parse the console command.
-     *
-     * @param command All parameters from console.
-     */
-    public static void parseCommand(String[] command) {
-        switch (command[0]) {
-            case "start": {
-                if (command.length == 2) {
-                    String project_name = command[1];
-                    if (ProjectManager.isProjectAvailable(project_name)) {
-                        startProject(project_name);
-                    } else {
-                        System.out.println("Project " + project_name + " not found, create now? (y/yes to continue)");
-
-                        final String input = System.console().readLine();
-                        if (input.equals("yes") || input.equals("y")) {
-                            startProject(project_name);
-                        }
-                    }
-                } else {
-                    printHelp();
-                }
-                break;
-            }
-            case "list": {
-                if (command.length == 1) {
-                    listProjects();
-                } else if ((command.length == 2) && command[1].equals("*")) {
-                    listProjectsLog(ProjectManager.getListProject().toArray(new String[1]));
-                } else {
-                    final String[] project_names = Arrays.copyOfRange(command, 1, command.length);
-                    if (areProjectsAllAvailable(project_names)) {
-                        listProjectsLog(project_names);
-                    } else {
-                        System.out.println("Not all given names are found, the project include:");
-                        listProjects();
-                    }
-                }
-                break;
-            }
-            case "delete": {
-                final String[] project_names = Arrays.copyOfRange(command, 1, command.length);
-
-                if (areProjectsAllAvailable(project_names)) {
-                    for (final String name : project_names) {
-                        ProjectManager.deleteProject(name);
-                    }
-                } else {
-                    System.out.println("Not all given names are found, the project include:");
-                    listProjects();
-                }
-                break;
-            }
-            case "date": {
-                final ArrayList<Instant> dates = ProjectManager.getListDates();
-                if (command.length == 1) {
-                    dates.stream().forEach(date -> System.out.println(date.toString().split("T")[0]));
-                }
-                // todo list a date
-                break;
-            }
-            case "x": {
-                startGui();
-                break;
-            }
-            default: {
-                printHelp();
-                break;
             }
         }
     }
