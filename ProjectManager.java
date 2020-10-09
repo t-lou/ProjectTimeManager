@@ -139,13 +139,14 @@ public class ProjectManager {
      * @return List of available dates.
      */
     public static ArrayList<Instant> getListDates() {
-        return new ArrayList<>(getListProject().stream()
-                .map(project_name -> new ProjectManager(project_name).getGroupedLog().keySet())
-                .flatMap(set -> set.stream())
-                .distinct()
-                .sorted(Collections.reverseOrder())
-                .map(date -> Instant.ofEpochSecond(date * TimeLogManager.SECONDS_PER_DAY))
-                .collect(Collectors.toCollection(ArrayList::new)));
+    return new ArrayList<>(
+        getListProject().stream()
+            .map(project_name -> new ProjectManager(project_name).getGroupedLog().keySet())
+            .flatMap(set -> set.stream())
+            .distinct()
+            .sorted(Collections.reverseOrder())
+            .map(date -> Instant.ofEpochSecond(date * TimeLogManager.SECONDS_PER_DAY))
+            .collect(Collectors.toCollection(ArrayList::new)));
     }
 
     /**

@@ -28,23 +28,6 @@ public class CommandParser {
     System.out.println("\tStart the GUI.");
   }
 
-  /**
-   * Get a text which represents the duration in hour, minute and second.
-   *
-   * @param duration Duration to show.
-   * @return Text which shows the duration.
-   */
-  public static String getTextForDuration(Duration duration) {
-    final String text =
-        String.format(
-            "%3dhr %2dmin %2ds",
-            duration.toHours(),
-            duration.toMinutes() - duration.toHours() * 60L,
-            duration.toMillis() / 1000L - duration.toMinutes() * 60L);
-
-    return text;
-  }
-
   /** List all on-going projects and elapsed time. */
   public static void listProjects() {
     System.out.println("The recorded projects:");
@@ -53,7 +36,7 @@ public class CommandParser {
           Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(null));
 
       System.out.println(project_name);
-      System.out.println("\t" + getTextForDuration(duration));
+      System.out.println("\t" + Interval.getTextForDuration(duration));
     }
   }
 
@@ -80,7 +63,7 @@ public class CommandParser {
       System.out.println(
           full_text_date.split("T")[0]
               + "\tElapsed time: "
-              + getTextForDuration(Duration.ofMillis(duration_ms)));
+              + Interval.getTextForDuration(Duration.ofMillis(duration_ms)));
 
       for (Interval interval : grouped_log.get(day)) {
         System.out.println("\t" + interval.formatDateTime());

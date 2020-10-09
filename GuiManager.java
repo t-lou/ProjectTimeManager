@@ -136,7 +136,7 @@ public class GuiManager {
       final String text =
           project_name
               + ": "
-              + CommandParser.getTextForDuration(
+              + Interval.getTextForDuration(
                   Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(dates)));
       final JButton button =
           initButton(
@@ -225,7 +225,7 @@ public class GuiManager {
       final long duration_ms =
           grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
 
-      text += ": " + CommandParser.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
+      text += ": " + Interval.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
 
       text +=
           String.join(

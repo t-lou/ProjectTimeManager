@@ -54,6 +54,27 @@ public class Interval {
   }
 
   /**
+   * Get a text which represents the duration in hour, minute and second.
+   *
+   * @param duration Duration to show.
+   * @return Text which shows the duration.
+   */
+  public static String getTextForDuration(final Duration duration) {
+    final String text =
+        String.format(
+            "%3d:%02d:%02d",
+            duration.toHours(),
+            duration.toMinutes() - duration.toHours() * 60L,
+            duration.toMillis() / 1000L - duration.toMinutes() * 60L);
+
+    return text;
+  }
+
+  public String getTextForDuration() {
+    return getTextForDuration(Duration.between(_time_start, _time_end));
+  }
+
+  /**
    * Get the starting time.
    *
    * @return The starting time.
@@ -82,22 +103,23 @@ public class Interval {
     return parts[1] + "_" + parts[2];
   }
 
+  public static String getMonthAndYear(final LocalDateTime time) {
+    final String[] parts = getInfoInStrings(time);
+    return parts[1] + "/" + parts[2];
+  }
+
   public static String getDateInYear(final LocalDateTime time) {
     final String[] parts = getInfoInStrings(time);
     return parts[0] + "/" + parts[1];
   }
 
-  public String getDateInYear() {
-    return getDateInYear(_time_start);
+  public static String getDate(final LocalDateTime time) {
+    final String[] parts = getInfoInStrings(time);
+    return parts[0] + "/" + parts[1] + "/" + parts[2];
   }
 
-  public String toRtfRow() {
-    return "\\intbl"
-        + _time_start.format(_formatter)
-        + "\\cell "
-        + "\\intbl"
-        + _time_end.format(_formatter)
-        + "\\cell ";
+  public String getDateInYear() {
+    return getDateInYear(_time_start);
   }
 
   public Interval(String text) {
