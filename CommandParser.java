@@ -136,4 +136,8 @@ public class CommandParser {
             }
         }
     }
+
+    public static void checkIn() {
+        startProject(TimeLogManager.getCurrnetMonthId());
+    }
 }

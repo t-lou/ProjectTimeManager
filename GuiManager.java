@@ -232,6 +232,11 @@ public class GuiManager {
         prepareGui();
     }
 
+    private void checkIn() {
+        destroyGui();
+        CommandParser.checkIn();
+    }
+
     /**
      * Show the main manu for starting one project, either available or new.
      */
@@ -336,7 +341,7 @@ public class GuiManager {
 
         final JButton button_checkin = initButton("CHECK IN", new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                startProjectMenu();
+                checkIn();
             }
         });
         final JButton button_start = initButton("START", new ActionListener() {

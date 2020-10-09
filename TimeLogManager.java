@@ -79,6 +79,12 @@ class Interval {
         return _time_end;
     }
 
+    public static String getMonthId(final LocalDateTime time) {
+        final String[] parts = time.format(_formatter).split("[/ ]");
+        assert (parts.length == 4);
+        return parts[1] + "_" + parts[2];
+    }
+
 
     public Interval(String text) {
         final String[] slices = text.split(" - ");
@@ -297,8 +303,12 @@ public class TimeLogManager {
         return map;
     }
 
-    LocalDateTime getStartTime() {
+    public LocalDateTime getStartTime() {
         return _time_start;
+    }
+
+    static public String getCurrnetMonthId() {
+        return Interval.getMonthId(LocalDateTime.now());
     }
 
     public TimeLogManager(Logger log) {
