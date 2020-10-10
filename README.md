@@ -56,3 +56,9 @@ for i in $(ls .ptm_projects); do echo .ptm_projects/$i; cat .ptm_projects/$i; do
 
 ![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/date-1.png)
 ![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/date-2.png)
+
+- report examples
+
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_google_doc.PNG)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_word.PNG)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_wordpad.PNG)
