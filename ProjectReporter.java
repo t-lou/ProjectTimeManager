@@ -32,19 +32,14 @@ public class ProjectReporter {
   }
 
   private static String formatCell(final String content) {
-    return "\\intbl "
-        + content
-            .chars()
-            .filter(ch -> ch != ' ')
-            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-            .toString()
-        + " \\cell"
-        + _sep;
+    return "\\intbl " + Interval.removeSpaces(content) + " \\cell" + _sep;
   }
 
   private String createTable() {
     String table = "\\par \\sb200 \\qc" + _sep;
     final long should_millis = _should_duration.toMillis();
+    long balance = 0l;
+    long total_time = 0l;
     final int[] right_bounds = new int[] {700, 1600, 2500, 3400, 4400, 5400, 6400};
     final String cell_def =
         Arrays.stream(right_bounds)
@@ -62,8 +57,8 @@ public class ProjectReporter {
     table += formatCell("Change");
     table += "\\row \\pard" + _sep;
 
-    for (final Map.Entry<Long, ArrayList<Interval>> it :
-        _time_manager.getGroupedIntervals().entrySet()) {
+    final Map<Long, ArrayList<Interval>> intervals_per_day = _time_manager.getGroupedIntervals();
+    for (final Map.Entry<Long, ArrayList<Interval>> it : intervals_per_day.entrySet()) {
       final long elapsed_millis =
           it.getValue().stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
       String text_day_sum = Interval.getTextForDuration(Duration.ofMillis(elapsed_millis));
@@ -72,6 +67,8 @@ public class ProjectReporter {
           (elapsed_millis >= should_millis ? "+" : "-")
               + Interval.getTextForDuration(
                   Duration.ofMillis(Math.abs(elapsed_millis - should_millis)));
+      balance += (elapsed_millis - should_millis);
+      total_time += elapsed_millis;
 
       for (final Interval interval : it.getValue()) {
         table += "\\trowd \\trqc " + cell_def + _sep;
@@ -90,11 +87,20 @@ public class ProjectReporter {
         text_delta = "";
       }
     }
+    final String summary =
+        String.format(
+            "The total working time for the %d days with time tracking is %s, the balance for this period is %s.",
+            intervals_per_day.size(),
+            Interval.removeSpaces(Interval.getTextForDuration(Duration.ofMillis(total_time))),
+            (balance >= 0l ? "+" : "-")
+                + Interval.removeSpaces(
+                    Interval.getTextForDuration(Duration.ofMillis(Math.abs(balance)))));
+    table += "\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep;
     return table;
   }
 
   private String createGreetingAgain() {
-    String text = "\\par \\pard \\sb300 \\plain {\\loch Sincerely your}" + _sep;
+    String text = "\\par \\pard \\sb300 \\plain {\\loch Sincerely yours}" + _sep;
     text += "\\par \\pard \\sb300 \\plain {\\loch ProjectTimeManager from t-lou}" + _sep;
     return text;
   }

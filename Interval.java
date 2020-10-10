@@ -78,6 +78,14 @@ public class Interval {
     return getTextForDuration(Duration.between(_time_start, _time_end));
   }
 
+  public static String removeSpaces(final String content) {
+    return content
+        .chars()
+        .filter(ch -> ch != ' ')
+        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+        .toString();
+  }
+
   /**
    * Get the starting time.
    *
