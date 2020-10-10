@@ -156,6 +156,47 @@ public class GuiManager {
     prepareGui();
   }
 
+  private String getProjectSummary(final String project_name, ArrayList<Instant> preferred_dates) {
+    final HashMap<Long, ArrayList<Interval>> grouped_log =
+        new ProjectManager(project_name).getGroupedLog();
+
+    final ArrayList<Instant> dates =
+        (preferred_dates != null) ? preferred_dates : ProjectManager.getListDates();
+
+    final ArrayList<Long> dates_as_key =
+        dates.stream()
+            .map(date -> (date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+    final ArrayList<Long> keys =
+        new ArrayList<>(grouped_log.keySet())
+            .stream()
+                .filter(date -> dates_as_key.contains(date))
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new));
+
+    final String eol = System.lineSeparator();
+    String text = "";
+    for (final Long day : keys) {
+      text += Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString().split("T")[0];
+
+      final long duration_ms =
+          grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
+
+      text += ": " + Interval.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
+
+      text +=
+          String.join(
+              eol,
+              grouped_log.get(day).stream()
+                  .map(interval -> interval.formatDateTime())
+                  .collect(Collectors.toList()));
+
+      text += eol + eol;
+    }
+    return text;
+  }
+
   /**
    * Show the details of one single project.
    *
@@ -181,7 +222,7 @@ public class GuiManager {
                 destroyGui();
 
                 final JFileChooser chooser = new JFileChooser();
-                chooser.setFileFilter(new FileNameExtensionFilter("RTF", "rtf"));
+                chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
                 chooser.showOpenDialog(null);
 
                 String filename = chooser.getSelectedFile().getAbsolutePath();
@@ -197,49 +238,24 @@ public class GuiManager {
 
     panel.add(button);
 
-    // todo check the existance of project.
-    final HashMap<Long, ArrayList<Interval>> grouped_log =
-        new ProjectManager(project_name).getGroupedLog();
+    final String text = getProjectSummary(project_name, preferred_dates);
+    JTextArea label = new JTextArea(text);
 
-    final ArrayList<Instant> dates =
-        (preferred_dates != null) ? preferred_dates : ProjectManager.getListDates();
+    final int num_line =
+        "\n\r"
+            .chars()
+            .map(end -> text.chars().map(ch -> (ch == end ? 1 : 0)).sum())
+            .max()
+            .getAsInt();
+    final int num_panel_for_text = (int)Math.ceil((float)num_line / 6.0);
+    System.out.println(num_panel_for_text);
+    label.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * num_panel_for_text));
+    // center alignment not working
+    // label.setAlignmentY(JTextArea.CENTER_ALIGNMENT);
+    // label.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
+    panel.add(label);
 
-    final ArrayList<Long> dates_as_key =
-        dates.stream()
-            .map(date -> (date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY))
-            .collect(Collectors.toCollection(ArrayList::new));
-
-    final ArrayList<Long> keys =
-        new ArrayList<>(grouped_log.keySet())
-            .stream()
-                .filter(date -> dates_as_key.contains(date))
-                .sorted()
-                .collect(Collectors.toCollection(ArrayList::new));
-
-    final String eol = "<br/>";
-    String text = "<html>";
-
-    for (final Long day : keys) {
-      text += Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString().split("T")[0];
-
-      final long duration_ms =
-          grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
-
-      text += ": " + Interval.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
-
-      text +=
-          String.join(
-              eol,
-              grouped_log.get(day).stream()
-                  .map(interval -> interval.formatDateTime())
-                  .collect(Collectors.toList()));
-
-      text += eol + eol;
-    }
-
-    text += "</html>";
-
-    panel.add(new JLabel(text));
+    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * (num_panel_for_text + 1)));
 
     addRightButtonReturn(panel);
     addPanelToGui(panel);
