@@ -59,6 +59,7 @@ for i in $(ls .ptm_projects); do echo .ptm_projects/$i; cat .ptm_projects/$i; do
 
 - report examples
 
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_google_doc.PNG)
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_word.PNG)
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_wordpad.PNG)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_google_doc.png)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_word.png)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_wordpad.png)
+![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_libreoffice.png)
