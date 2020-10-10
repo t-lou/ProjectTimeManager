@@ -258,7 +258,6 @@ public class GuiManager {
             .max()
             .getAsInt();
     final int num_panel_for_text = (int) Math.ceil((float) num_line / 6.0);
-    System.out.println(num_panel_for_text);
     label.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * num_panel_for_text));
     // center alignment not working
     // label.setAlignmentY(JTextArea.CENTER_ALIGNMENT);

@@ -27,6 +27,10 @@ public class Interval {
     return LocalDateTime.parse(text, _formatter);
   }
 
+  public static String trimTimeInDay(final String formatted_data) {
+    return formatted_data.substring(11);
+  }
+
   public String formatStartTime() {
     return getStartTime().format(_formatter);
   }
