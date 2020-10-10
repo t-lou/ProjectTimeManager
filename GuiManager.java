@@ -214,7 +214,7 @@ public class GuiManager {
 
     panel.setBackground(_colour_boundary);
 
-    final JButton button =
+    final JButton button_export =
         initButton(
             "EXPORT",
             new ActionListener() {
@@ -236,7 +236,17 @@ public class GuiManager {
               }
             });
 
-    panel.add(button);
+    final JButton button_delete =
+        initButton(
+            "DELETE",
+            new ActionListener() {
+              public void actionPerformed(ActionEvent e) {
+                ProjectManager.deleteProject(project_name);
+              }
+            });
+
+    panel.add(button_export);
+    panel.add(button_delete);
 
     final String text = getProjectSummary(project_name, preferred_dates);
     JTextArea label = new JTextArea(text);
@@ -247,7 +257,7 @@ public class GuiManager {
             .map(end -> text.chars().map(ch -> (ch == end ? 1 : 0)).sum())
             .max()
             .getAsInt();
-    final int num_panel_for_text = (int)Math.ceil((float)num_line / 6.0);
+    final int num_panel_for_text = (int) Math.ceil((float) num_line / 6.0);
     System.out.println(num_panel_for_text);
     label.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * num_panel_for_text));
     // center alignment not working
@@ -255,7 +265,8 @@ public class GuiManager {
     // label.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
     panel.add(label);
 
-    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * (num_panel_for_text + 1)));
+    panel.setPreferredSize(
+        new Dimension(_width_per_unit, _height_per_unit * (num_panel_for_text + 2)));
 
     addRightButtonReturn(panel);
     addPanelToGui(panel);
