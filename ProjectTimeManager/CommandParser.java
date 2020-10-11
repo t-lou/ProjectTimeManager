@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -131,9 +130,7 @@ public class CommandParser {
     }
   }
 
-  /**
-   * Start one project with current MONTH/YEAR as name.
-   */
+  /** Start one project with current MONTH/YEAR as name. */
   public static void checkIn() {
     startProject(TimeLogManager.getCurrnetMonthId());
   }

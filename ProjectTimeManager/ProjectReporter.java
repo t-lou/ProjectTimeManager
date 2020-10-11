@@ -1,10 +1,13 @@
 package ProjectTimeManager;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.io.*;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public class ProjectReporter {
@@ -14,8 +17,12 @@ public class ProjectReporter {
   private static final String _doc_head = "{\\rtf1\\ansi\\deff0";
   private static final String _doc_end = "}";
   private static final String _sep = System.lineSeparator();
-  private final String _name = "Max Mustermann";
-  private final Duration _should_duration = Duration.ofHours(8);
+  private static final String _path_config = ".config";
+  private static final String _key_name = "name";
+  private static final String _key_duration = "hours";
+  public static final String[] config_keys = {_key_name, _key_duration};
+  private final String _name;
+  private final Duration _should_duration;
 
   private String createGreeting() {
     final String start_date_str =
@@ -130,7 +137,69 @@ public class ProjectReporter {
     }
   }
 
+  public static boolean isConfigReady() {
+    if (!Files.exists(Paths.get(_path_config))) {
+      return false;
+    }
+    final HashMap<String, String> config = loadConfigItems();
+    return config != null && Arrays.stream(config_keys).allMatch(key -> config.containsKey(key));
+  }
+
+  public static void saveConfigItems(final HashMap<String, String> config) {
+    try {
+      FileOutputStream out_stream = new FileOutputStream(_path_config, false);
+      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
+
+      for (Map.Entry<String, String> entry : config.entrySet()) {
+        br.write(entry.getKey() + ": " + entry.getValue());
+        br.newLine();
+      }
+
+      br.close();
+    } catch (Exception ex) {
+    }
+  }
+
+  public static HashMap<String, String> loadConfigItems() {
+    HashMap<String, String> config = null;
+
+    try {
+      final FileInputStream in_stream = new FileInputStream(_path_config);
+      final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
+
+      while (true) {
+        String line = br.readLine();
+        if (line == null || line.isEmpty()) {
+          break;
+        }
+        assert (line.chars().map(ch -> (ch == ':' ? 1 : 0)).sum() == 1);
+        final int sep = line.indexOf(':');
+        final String key = line.substring(0, sep);
+        String value = line.substring(sep + 1);
+        while (!value.isEmpty() && value.charAt(0) == ' ') {
+          value = value.substring(1);
+        }
+        if (Arrays.asList(config_keys).contains(key)) {
+          if (config == null) {
+            config = new HashMap<String, String>();
+          }
+          config.put(key, value);
+        }
+      }
+
+      br.close();
+    } catch (Exception ex) {
+      return null;
+    }
+
+    return config;
+  }
+
   public ProjectReporter(final TimeLogManager time_manager) {
     _time_manager = time_manager;
+
+    final HashMap<String, String> config = loadConfigItems();
+    _name = config.get(_key_name);
+    _should_duration = Duration.ofHours(Long.parseLong(config.get(_key_duration)));
   }
 }

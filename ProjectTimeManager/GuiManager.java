@@ -1,6 +1,5 @@
 package ProjectTimeManager;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,7 +12,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class GuiManager {
@@ -153,7 +154,6 @@ public class GuiManager {
       panel.add(button);
     }
 
-    addRightButtonReturn(panel);
     addPanelToGui(panel);
 
     prepareGui();
@@ -230,19 +230,11 @@ public class GuiManager {
               new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                   destroyGui();
-
-                  final JFileChooser chooser = new JFileChooser();
-                  chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
-                  chooser.showOpenDialog(null);
-
-                  String filename = chooser.getSelectedFile().getAbsolutePath();
-                  if (filename.length() <= 4
-                      || !filename.substring(filename.length() - 4).equals(".rtf")) {
-                    filename += ".rtf";
+                  if (!ProjectReporter.isConfigReady()) {
+                    generateReportAfterConfig(project_name);
+                  } else {
+                    generateReport(project_name);
                   }
-
-                  new ProjectReporter(new ProjectManager(project_name).getLogManager())
-                      .output(filename);
                 }
               }));
       panel.add(
@@ -273,6 +265,71 @@ public class GuiManager {
 
     panel.setPreferredSize(
         new Dimension(_width_per_unit, _height_per_unit * (num_panel_for_text + 2)));
+
+    addRightButtonReturn(panel);
+    addPanelToGui(panel);
+
+    prepareGui();
+  }
+
+  private void generateReport(final String project_name) {
+    final JFileChooser chooser = new JFileChooser();
+    chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
+    chooser.showOpenDialog(null);
+
+    String filename = chooser.getSelectedFile().getAbsolutePath();
+    if (filename.length() <= 4 || !filename.substring(filename.length() - 4).equals(".rtf")) {
+      filename += ".rtf";
+    }
+
+    new ProjectReporter(new ProjectManager(project_name).getLogManager()).output(filename);
+  }
+
+  private void generateReportAfterConfig(final String project_name) {
+    if (_gui != null) {
+      destroyGui();
+    }
+
+    _gui = new JFrame("Configuration for reporter");
+    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    final JPanel panel = new JPanel();
+    panel.setBackground(_colour_boundary);
+    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 5));
+
+    HashMap<String, String> pre_config = ProjectReporter.loadConfigItems();
+    HashMap<String, JTextField> text_fields = new HashMap<String, JTextField>();
+    for (final String item : ProjectReporter.config_keys) {
+      JLabel label = new JLabel(item);
+      label.setPreferredSize(new Dimension(_dimension.width, _dimension.height / 3));
+      label.setHorizontalAlignment(JTextField.CENTER);
+      panel.add(label, BorderLayout.CENTER);
+      JTextField field = new JTextField();
+      field.setPreferredSize(new Dimension(_dimension.width, _dimension.height / 3));
+      field.setHorizontalAlignment(JTextField.CENTER);
+      if (pre_config != null && pre_config.containsKey(item)) {
+        field.setText(pre_config.get(item));
+      }
+      panel.add(field, BorderLayout.CENTER);
+      text_fields.put(item, field);
+    }
+    panel.add(
+        initButton(
+            "GENERATE",
+            new ActionListener() {
+              public void actionPerformed(ActionEvent e) {
+                HashMap<String, String> config = new HashMap<String, String>();
+                for (Map.Entry<String, JTextField> entry : text_fields.entrySet()) {
+                  config.put(entry.getKey(), entry.getValue().getText());
+                }
+
+                ProjectReporter.saveConfigItems(config);
+
+                generateReport(project_name);
+
+                destroyGui();
+              }
+            }));
 
     addRightButtonReturn(panel);
     addPanelToGui(panel);

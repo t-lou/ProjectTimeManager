@@ -1,16 +1,16 @@
 package ProjectTimeManager;
 
 import java.io.*;
-import java.time.LocalDateTime;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.Arrays;
-import java.util.List;
 
 public class TimeLogManager {
   /** The list of cached timestamps. */
@@ -109,7 +109,7 @@ public class TimeLogManager {
         final FileInputStream in_stream = new FileInputStream(file);
         final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
 
-        final List<String> ends = Arrays.asList(new String[] {"", "\n", null});
+        final List<String> ends = Arrays.asList(new String[] {"", "\n", "\r", null});
         while (true) {
           final String line = br.readLine();
 
