@@ -1,1 +1,1 @@
-java Main
+java ProjectTimeManager.Main
