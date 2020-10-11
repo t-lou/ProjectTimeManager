@@ -7,7 +7,7 @@ This toy project contains easy-to-use time logger with clear text log files (for
 
 # Start
 
-java Main x
+java Main
 
 # Operations
 
@@ -16,10 +16,15 @@ java Main x
 
 # Functions
 
+- **check in** check in immediately and start a project with name MONTH_YEAR
 - **start** start a new project (editable text field) or continue an existing project, hit ctrl-c when the work is
 paused or ended
 - **projects** show the sum of time for projects or select and show the log for one project
 - **date** show the logs on different dates
+
+# Report
+
+Report for project (now only tested for check-in) can be generated in RTF format.
 
 # Logs
 
