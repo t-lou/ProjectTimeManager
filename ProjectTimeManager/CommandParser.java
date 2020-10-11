@@ -131,6 +131,9 @@ public class CommandParser {
     }
   }
 
+  /**
+   * Start one project with current MONTH/YEAR as name.
+   */
   public static void checkIn() {
     startProject(TimeLogManager.getCurrnetMonthId());
   }

@@ -200,14 +200,17 @@ public class TimeLogManager {
     return map;
   }
 
+  /** Get the intervals in this project. */
   public ArrayList<Interval> getIntervals() {
     return _time_entries;
   }
 
+  /** Get the start time of this project. */
   public LocalDateTime getStartTime() {
     return _time_start;
   }
 
+  /** Get one id name for current month for check in. */
   public static String getCurrnetMonthId() {
     return Interval.getMonthId(LocalDateTime.now());
   }

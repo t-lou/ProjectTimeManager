@@ -21,6 +21,7 @@ public class ProjectManager {
   /** The extension for logging data. */
   private static final String _extension = ".prt";
 
+  /** Path for the lock. */
   private static final String _path_lock = Paths.get(_cache_path, "lock.lk").toString();
 
   /** The name of file for this project, if the Manager is used to manage one project. */
@@ -209,6 +210,7 @@ public class ProjectManager {
     new File(_path_lock).delete();
   }
 
+  /** Get the log manager to access logged intervals. */
   public TimeLogManager getLogManager() {
     return _log_manager;
   }

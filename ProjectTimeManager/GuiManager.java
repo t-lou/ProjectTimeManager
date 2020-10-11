@@ -50,7 +50,8 @@ public class GuiManager {
   /**
    * Initialize button with text and predefined looks.
    *
-   * @param text
+   * @param text The text to show on the button.
+   * @param action_listener Action to take when button is pressed.
    */
   private static JButton initButton(final String text, final ActionListener action_listener) {
     JButton button = new JButton(text);
@@ -158,6 +159,12 @@ public class GuiManager {
     prepareGui();
   }
 
+  /**
+   * Show the simple summary of a project.
+   *
+   * @param project_names Names of the given projects.
+   * @param preferred_dates Which days to summarize.
+   */
   private String getProjectSummary(final String project_name, ArrayList<Instant> preferred_dates) {
     final HashMap<Long, ArrayList<Interval>> grouped_log =
         new ProjectManager(project_name).getGroupedLog();
@@ -216,39 +223,37 @@ public class GuiManager {
 
     panel.setBackground(_colour_boundary);
 
-    final JButton button_export =
-        initButton(
-            "EXPORT",
-            new ActionListener() {
-              public void actionPerformed(ActionEvent e) {
-                destroyGui();
+    if (preferred_dates == null || preferred_dates.isEmpty()) {
+      panel.add(
+          initButton(
+              "EXPORT",
+              new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                  destroyGui();
 
-                final JFileChooser chooser = new JFileChooser();
-                chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
-                chooser.showOpenDialog(null);
+                  final JFileChooser chooser = new JFileChooser();
+                  chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
+                  chooser.showOpenDialog(null);
 
-                String filename = chooser.getSelectedFile().getAbsolutePath();
-                if (filename.length() <= 4
-                    || !filename.substring(filename.length() - 4).equals(".rtf")) {
-                  filename += ".rtf";
+                  String filename = chooser.getSelectedFile().getAbsolutePath();
+                  if (filename.length() <= 4
+                      || !filename.substring(filename.length() - 4).equals(".rtf")) {
+                    filename += ".rtf";
+                  }
+
+                  new ProjectReporter(new ProjectManager(project_name).getLogManager())
+                      .output(filename);
                 }
-
-                new ProjectReporter(new ProjectManager(project_name).getLogManager())
-                    .output(filename);
-              }
-            });
-
-    final JButton button_delete =
-        initButton(
-            "DELETE",
-            new ActionListener() {
-              public void actionPerformed(ActionEvent e) {
-                ProjectManager.deleteProject(project_name);
-              }
-            });
-
-    panel.add(button_export);
-    panel.add(button_delete);
+              }));
+      panel.add(
+          initButton(
+              "DELETE",
+              new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                  ProjectManager.deleteProject(project_name);
+                }
+              }));
+    }
 
     final String text = getProjectSummary(project_name, preferred_dates);
     JTextArea label = new JTextArea(text);
@@ -275,12 +280,13 @@ public class GuiManager {
     prepareGui();
   }
 
+  /** Action for checking in. */
   private void checkIn() {
     destroyGui();
     CommandParser.checkIn();
   }
 
-  /** Show the main manu for starting one project, either available or new. */
+  /** Show the main menu for starting one project, either available or new. */
   private void startProjectMenu() {
     if (_gui != null) {
       destroyGui();
@@ -380,6 +386,7 @@ public class GuiManager {
     prepareGui();
   }
 
+  /** Show the main menu. */
   private void mainMenu() {
     if (_gui != null) {
       destroyGui();
