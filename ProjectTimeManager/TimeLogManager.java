@@ -8,16 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TimeLogManager {
   /** The list of cached timestamps. */
   private ArrayList<Interval> _time_entries = new ArrayList<>();
-
-  /** The logger for this class. */
-  private Logger _log;
 
   /** Starting time of the latest interval (on-going interval if this project is opened). */
   private LocalDateTime _time_start;
@@ -60,13 +56,10 @@ public class TimeLogManager {
 
       br.close();
 
-      _log.info("Wrote " + _time_entries.size() + " time entries.");
-
       // this file is supposed to be finished, clear the cached timestamps
       _time_entries.clear();
 
     } catch (Exception ex) {
-      _log.severe(ex.getMessage());
     }
   }
 
@@ -123,18 +116,15 @@ public class TimeLogManager {
         br.close();
       } catch (Exception ex) {
         // somewhere problem occurs
-        _log.severe(ex.getMessage());
         return false;
       }
 
       if (!areLogsOrdered()) {
-        _log.severe("Logs are not aligned.");
+        System.out.println("Logs are not aligned.");
       }
 
       return true;
     } else {
-      // file not available
-      _log.severe("Logging file " + filename + " not found.");
       return false;
     }
   }
@@ -143,7 +133,7 @@ public class TimeLogManager {
   public void addNow() {
     _time_start = LocalDateTime.now();
     // record this timestamp
-    _log.info("Added now as starting time " + _time_start.toString());
+    System.out.println("Added now as starting time " + _time_start.toString());
   }
 
   /**
@@ -215,7 +205,5 @@ public class TimeLogManager {
     return Interval.getMonthId(LocalDateTime.now());
   }
 
-  public TimeLogManager(Logger log) {
-    _log = log;
-  }
+  public TimeLogManager() {}
 }

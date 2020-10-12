@@ -4,13 +4,10 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /// This class handles the projects.
@@ -31,10 +28,7 @@ public class ProjectManager {
   private String _name;
 
   /** The log manager for time used in this project. */
-  private TimeLogManager _log_manager = new TimeLogManager(_log);
-
-  /** The logger for this class. */
-  private static Logger _log = Logger.getLogger("ptm");
+  private TimeLogManager _log_manager = new TimeLogManager();
 
   /**
    * Checks whether the save data for this project exists.
@@ -85,11 +79,9 @@ public class ProjectManager {
     _filename = getLogFilename(project_name);
 
     if (isProjectAvailable()) {
-      _log.log(Level.FINE, "Project " + project_name + " exists.");
-
       _log_manager.readLog(_filename);
     } else {
-      _log.log(Level.INFO, "Project " + project_name + " does not exist.");
+      System.out.println("Project " + project_name + " does not exist.");
     }
   }
 
@@ -190,7 +182,7 @@ public class ProjectManager {
     try {
       new File(_path_lock).createNewFile();
     } catch (Exception ex) {
-      _log.severe("Cannot establish lock file, thus cannot start.");
+      System.out.println("Cannot establish lock file, thus cannot start.");
       System.exit(1);
     }
     _log_manager.addNow();
@@ -198,12 +190,8 @@ public class ProjectManager {
 
   /** End this project and log the time. */
   public void end() {
-    if (!isRunning()) {
-      _log.severe("No project is running. ");
-      _log.severe("Start time: " + _log_manager.getStartTime().toString());
-      _log.severe("End time:   " + LocalDateTime.now().toString());
-      System.exit(1);
-    }
+    assert (!isRunning());
+    System.exit(1);
 
     _log_manager.updateLog(_filename);
 
