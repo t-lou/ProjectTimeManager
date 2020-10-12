@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,11 +68,14 @@ public class ProjectReporter {
     table += "\\row \\pard" + _sep;
 
     final Map<Long, ArrayList<Interval>> intervals_per_day = _time_manager.getGroupedIntervals();
-    for (final Map.Entry<Long, ArrayList<Interval>> it : intervals_per_day.entrySet()) {
+    ArrayList<Long> sorted_days = new ArrayList<>(intervals_per_day.keySet());
+    Collections.sort(sorted_days);
+    for (final Long day : sorted_days) {
+      final ArrayList<Interval> intervals_in_day = intervals_per_day.get(day);
       final long elapsed_millis =
-          it.getValue().stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
+          intervals_in_day.stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
       String text_day_sum = Interval.getTextForDuration(Duration.ofMillis(elapsed_millis));
-      String text_date = it.getValue().get(0).getDateInYear();
+      String text_date = intervals_in_day.get(0).getDateInYear();
       String text_delta =
           (elapsed_millis >= should_millis ? "+" : "-")
               + Interval.getTextForDuration(
@@ -79,7 +83,7 @@ public class ProjectReporter {
       balance += (elapsed_millis - should_millis);
       total_time += elapsed_millis;
 
-      for (final Interval interval : it.getValue()) {
+      for (final Interval interval : intervals_in_day) {
         table += "\\trowd \\trqc " + cell_def + _sep;
         table += formatCell(text_date);
         table += formatCell(Interval.trimTimeInDay(interval.formatStartTime()));
@@ -200,6 +204,7 @@ public class ProjectReporter {
 
     final HashMap<String, String> config = loadConfigItems();
     _name = config.get(_key_name);
-    _should_duration = Duration.ofHours(Long.parseLong(config.get(_key_duration)));
+    String text_duration = config.get(_key_duration).replace(",", ".");
+    _should_duration = Duration.ofMinutes((long) (Float.parseFloat(text_duration) * 60.0));
   }
 }
