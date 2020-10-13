@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,30 +38,17 @@ public class TimeLogManager {
    * @param filename The given filename.
    */
   public void updateLog(String filename) {
-    File file = new File(filename);
-    try {
-      FileOutputStream out_stream = new FileOutputStream(file, false);
+    List<String> contents = new LinkedList<String>();
 
-      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
-
-      for (Interval interval : _time_entries) {
-        // for each timestamp, write the text for it and write to file
-        br.write(interval.formatDateTime());
-        br.newLine();
-        br.flush();
-      }
-      String text = new Interval(_time_start, LocalDateTime.now()).formatDateTime();
-      br.write(text);
-      br.newLine();
-      br.flush();
-
-      br.close();
-
-      // this file is supposed to be finished, clear the cached timestamps
-      _time_entries.clear();
-
-    } catch (Exception ex) {
+    for (Interval interval : _time_entries) {
+      contents.add(interval.formatDateTime());
     }
+
+    writeFile(filename, contents);
+  }
+
+  public void closeNow() {
+    _time_entries.add(new Interval(_time_start, LocalDateTime.now()));
   }
 
   /**
@@ -91,42 +79,66 @@ public class TimeLogManager {
    * @return Whether reading the time log is successful, it is successful only if the file exists
    *     and contains even number of entries.
    */
-  public boolean readLog(String filename) {
+  public boolean readLog(final String filename) {
     _time_entries.clear();
+    return addLog(filename);
+  }
 
+  public boolean addLog(final String filename) {
+    final List<String> contents = readFile(filename);
+    if (contents == null || contents.isEmpty()) {
+      return false;
+    }
+    for (final String line : contents) {
+      _time_entries.add(new Interval(line));
+    }
+    if (!areLogsOrdered()) {
+      System.out.println("Logs are not aligned.");
+    }
+    return true;
+  }
+
+  public static List<String> readFile(final String filename) {
+    List<String> contents = null;
     final File file = new File(filename);
-
     if (file.canRead()) {
-      // file is available, try to read and parse
       try {
         final FileInputStream in_stream = new FileInputStream(file);
         final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
 
+        contents = new LinkedList<String>();
         final List<String> ends = Arrays.asList(new String[] {"", "\n", "\r", null});
         while (true) {
           final String line = br.readLine();
-
           if (ends.contains(line)) {
             break;
           }
-
-          _time_entries.add(new Interval(line));
+          contents.add(line);
         }
 
         br.close();
       } catch (Exception ex) {
-        // somewhere problem occurs
-        return false;
       }
+    }
+    return contents;
+  }
 
-      if (!areLogsOrdered()) {
-        System.out.println("Logs are not aligned.");
+  public static boolean writeFile(final String filename, final List<String> contents) {
+    File file = new File(filename);
+    try {
+      FileOutputStream out_stream = new FileOutputStream(file, false);
+      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
+      for (final String content : contents) {
+        br.write(content);
+        br.newLine();
       }
+      br.flush();
 
-      return true;
-    } else {
+      br.close();
+    } catch (Exception ex) {
       return false;
     }
+    return true;
   }
 
   /** Add current timestamp to the cache list. */
@@ -144,14 +156,12 @@ public class TimeLogManager {
    * @return Whether the dates are given and the interval is on one of the dates.
    */
   public static boolean isIntervalOnDates(Interval interval, ArrayList<Instant> dates) {
-    if (dates == null || dates.isEmpty()) {
-      return false;
-    } else {
-      return dates.stream()
-          .map(Instant::getEpochSecond)
-          .collect(Collectors.toList())
-          .contains(getSecondStartOfDay(interval.getStartTime()));
-    }
+    return dates != null
+        && !dates.isEmpty()
+        && (dates.stream()
+            .map(Instant::getEpochSecond)
+            .collect(Collectors.toList())
+            .contains(getSecondStartOfDay(interval.getStartTime())));
   }
 
   /**
@@ -203,6 +213,18 @@ public class TimeLogManager {
   /** Get one id name for current month for check in. */
   public static String getCurrnetMonthId() {
     return Interval.getMonthId(LocalDateTime.now());
+  }
+
+  public static void updateThisSession(final String filename, final String text) {
+
+    List<String> contents = new LinkedList<String>();
+    contents.add(text);
+
+    writeFile(filename, contents);
+  }
+
+  public void updateThisSession(final String filename) {
+    updateThisSession(filename, new Interval(_time_start, LocalDateTime.now()).formatDateTime());
   }
 
   public TimeLogManager() {}

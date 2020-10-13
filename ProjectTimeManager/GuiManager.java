@@ -337,10 +337,58 @@ public class GuiManager {
     prepareGui();
   }
 
-  /** Action for checking in. */
-  private void checkIn() {
-    destroyGui();
-    ProjectManager.checkIn();
+  private void checkAndStartProject(final String project_name) {
+    if (new ProjectManager(project_name).isRunning()) {
+      if (_gui != null) {
+        destroyGui();
+      }
+
+      final JButton button_delete_start =
+          initButton(
+              "DELETE && START",
+              new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                  destroyGui();
+                  new ProjectManager(project_name).deleteLock();
+                  ProjectManager.startProject(project_name);
+                }
+              });
+
+      final JTextField field_edit_start = new JTextField();
+      field_edit_start.setPreferredSize(_dimension);
+      field_edit_start.setHorizontalAlignment(JTextField.CENTER);
+      field_edit_start.setText(ProjectManager.getPendingSessionTime(project_name));
+      field_edit_start.addActionListener(
+          new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              destroyGui();
+              // check whether the format is correct TODO
+              ProjectManager.updatePendingSessionTime(project_name, field_edit_start.getText());
+              ProjectManager.finishLastSession(project_name);
+              ProjectManager.startProject(project_name);
+            }
+          });
+
+      final JPanel panel = new JPanel();
+
+      panel.setBackground(_colour_boundary);
+      panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 5));
+
+      panel.add(button_delete_start);
+      panel.add(field_edit_start, BorderLayout.CENTER);
+
+      addRightButtonReturn(panel);
+
+      _gui = new JFrame("Configuration for reporter");
+      _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+      addPanelToGui(panel);
+
+      prepareGui();
+
+    } else {
+      ProjectManager.startProject(project_name);
+    }
   }
 
   /** Show the main menu for starting one project, either available or new. */
@@ -369,7 +417,7 @@ public class GuiManager {
           public void actionPerformed(ActionEvent e) {
             destroyGui();
 
-            ProjectManager.startProject(field.getText());
+            checkAndStartProject(field.getText());
           }
         });
     panel.add(field, BorderLayout.CENTER);
@@ -382,7 +430,7 @@ public class GuiManager {
                 public void actionPerformed(ActionEvent e) {
                   destroyGui();
 
-                  ProjectManager.startProject(project_name);
+                  checkAndStartProject(project_name);
                 }
               });
 
@@ -457,7 +505,9 @@ public class GuiManager {
             "CHECK IN",
             new ActionListener() {
               public void actionPerformed(ActionEvent e) {
-                checkIn();
+
+                destroyGui();
+                checkAndStartProject(TimeLogManager.getCurrnetMonthId());
               }
             });
     final JButton button_start =

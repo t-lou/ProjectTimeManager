@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.stream.Collectors;
 
 /// This class handles the projects.
@@ -19,9 +21,6 @@ public class ProjectManager {
   /** The extension for logging data. */
   private static final String _extension = ".prt";
 
-  /** Path for the lock. */
-  private static final String _path_lock = Paths.get(_cache_path, "lock.lk").toString();
-
   /** The name of file for this project, if the Manager is used to manage one project. */
   private String _filename;
 
@@ -30,6 +29,12 @@ public class ProjectManager {
 
   /** The log manager for time used in this project. */
   private TimeLogManager _log_manager = new TimeLogManager();
+
+  private Semaphore _mutex = new Semaphore(1);
+
+  private String getPathLock() {
+    return Paths.get(_cache_path, _name + ".lk").toString();
+  }
 
   /**
    * Checks whether the save data for this project exists.
@@ -169,8 +174,19 @@ public class ProjectManager {
    *
    * @return Whether another project is running.
    */
-  private static boolean isRunning() {
-    return Files.exists(Paths.get(_path_lock));
+  public boolean isRunning() {
+    return Files.exists(Paths.get(getPathLock()));
+  }
+
+  public static void updatePendingSessionTime(final String project_name, final String text) {
+    TimeLogManager.updateThisSession(new ProjectManager(project_name).getPathLock(), text);
+  }
+
+  public static String getPendingSessionTime(final String project_name) {
+    final List<String> contents =
+        TimeLogManager.readFile(new ProjectManager(project_name).getPathLock());
+    assert contents != null && contents.size() == 1;
+    return contents.get(0);
   }
 
   /** Start this project. */
@@ -180,28 +196,43 @@ public class ProjectManager {
       System.exit(1);
     }
 
+    _log_manager.addNow();
     try {
-      new File(_path_lock).createNewFile();
+      updateThisSession();
     } catch (Exception ex) {
       System.out.println("Cannot establish lock file, thus cannot start.");
       System.exit(1);
     }
-    _log_manager.addNow();
   }
 
   /** End this project and log the time. */
   public void end() {
-    assert (!isRunning());
-    System.exit(1);
+    assert (isRunning());
 
-    _log_manager.updateLog(_filename);
+    try {
+      _mutex.acquire();
+      _log_manager.updateLog(_filename);
+    } catch (Exception er) {
+    } finally {
+      _mutex.release();
+    }
 
-    new File(_path_lock).delete();
+    deleteLock();
   }
 
   /** Get the log manager to access logged intervals. */
   public TimeLogManager getLogManager() {
     return _log_manager;
+  }
+
+  public void updateThisSession() {
+    try {
+      _mutex.acquire();
+      _log_manager.updateThisSession(getPathLock());
+    } catch (Exception er) {
+    } finally {
+      _mutex.release();
+    }
   }
 
   public ProjectManager() {
@@ -211,6 +242,18 @@ public class ProjectManager {
   public ProjectManager(String project_name) {
     this();
     initProject(project_name);
+  }
+
+  public void deleteLock() {
+    new File(getPathLock()).delete();
+  }
+
+  public static void finishLastSession(final String project_name) {
+    ProjectManager project = new ProjectManager(project_name);
+    if (project.isRunning()) {
+      project.getLogManager().addLog(project.getPathLock());
+      project.end();
+    }
   }
 
   /**
@@ -225,24 +268,20 @@ public class ProjectManager {
         .addShutdownHook(
             new Thread() {
               public void run() {
-                System.out.println();
                 System.out.println(
                     "Project " + project_name + " ends at " + LocalDateTime.now().toString());
+                project._log_manager.closeNow();
                 project.end();
               }
             });
 
-    while (true) {
+    while (project.isRunning()) {
       try {
-        Thread.sleep(1000L);
+        Thread.sleep(300l * 1000l);
+        project.updateThisSession();
       } catch (InterruptedException ex) {
         System.out.println("Sleep interrupted! Check date time!");
       }
     }
-  }
-
-  /** Start one project with current MONTH/YEAR as name. */
-  public static void checkIn() {
-    startProject(TimeLogManager.getCurrnetMonthId());
   }
 }
