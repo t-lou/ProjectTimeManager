@@ -340,7 +340,7 @@ public class GuiManager {
   /** Action for checking in. */
   private void checkIn() {
     destroyGui();
-    CommandParser.checkIn();
+    ProjectManager.checkIn();
   }
 
   /** Show the main menu for starting one project, either available or new. */
@@ -369,7 +369,7 @@ public class GuiManager {
           public void actionPerformed(ActionEvent e) {
             destroyGui();
 
-            CommandParser.startProject(field.getText());
+            ProjectManager.startProject(field.getText());
           }
         });
     panel.add(field, BorderLayout.CENTER);
@@ -382,7 +382,7 @@ public class GuiManager {
                 public void actionPerformed(ActionEvent e) {
                   destroyGui();
 
-                  CommandParser.startProject(project_name);
+                  ProjectManager.startProject(project_name);
                 }
               });
 

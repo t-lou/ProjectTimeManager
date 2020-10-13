@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -210,5 +211,38 @@ public class ProjectManager {
   public ProjectManager(String project_name) {
     this();
     initProject(project_name);
+  }
+
+  /**
+   * Start one project. If this project is new, then a confirmation is needed.
+   *
+   * @param project_name The name of project to start.
+   */
+  public static void startProject(String project_name) {
+    ProjectManager project = new ProjectManager(project_name);
+    project.start();
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread() {
+              public void run() {
+                System.out.println();
+                System.out.println(
+                    "Project " + project_name + " ends at " + LocalDateTime.now().toString());
+                project.end();
+              }
+            });
+
+    while (true) {
+      try {
+        Thread.sleep(1000L);
+      } catch (InterruptedException ex) {
+        System.out.println("Sleep interrupted! Check date time!");
+      }
+    }
+  }
+
+  /** Start one project with current MONTH/YEAR as name. */
+  public static void checkIn() {
+    startProject(TimeLogManager.getCurrnetMonthId());
   }
 }
