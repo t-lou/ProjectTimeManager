@@ -76,10 +76,7 @@ public class ProjectReporter {
           intervals_in_day.stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
       String text_day_sum = Interval.getTextForDuration(Duration.ofMillis(elapsed_millis));
       String text_date = intervals_in_day.get(0).getDateInYear();
-      String text_delta =
-          (elapsed_millis >= should_millis ? "+" : "-")
-              + Interval.getTextForDuration(
-                  Duration.ofMillis(Math.abs(elapsed_millis - should_millis)));
+      String text_delta = Interval.formatDurationMillis(elapsed_millis - should_millis);
       balance += (elapsed_millis - should_millis);
       total_time += elapsed_millis;
 
@@ -105,9 +102,7 @@ public class ProjectReporter {
             "The total working time for the %d days with time tracking is %s, the balance for this period is %s.",
             intervals_per_day.size(),
             Interval.removeSpaces(Interval.getTextForDuration(Duration.ofMillis(total_time))),
-            (balance >= 0l ? "+" : "-")
-                + Interval.removeSpaces(
-                    Interval.getTextForDuration(Duration.ofMillis(Math.abs(balance)))));
+            Interval.formatDurationMillis(balance));
     table += "\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep;
     return table;
   }

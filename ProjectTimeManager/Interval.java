@@ -82,6 +82,11 @@ public class Interval {
     return text;
   }
 
+  public static String formatDurationMillis(final long millis) {
+    return (millis >= 0l ? "+" : "-")
+        + removeSpaces(getTextForDuration(Duration.ofMillis(Math.abs(millis))));
+  }
+
   /** Get the formatted text to present this duration. */
   public String getTextForDuration() {
     return getTextForDuration(Duration.between(_time_start, _time_end));
@@ -94,11 +99,12 @@ public class Interval {
    * @return Text without empty spaces.
    */
   public static String removeSpaces(final String content) {
-    return content
-        .chars()
-        .filter(ch -> ch != ' ')
-        .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-        .toString();
+    return content.replace(" ", "");
+    // return content
+    //     .chars()
+    //     .filter(ch -> ch != ' ')
+    //     .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+    //     .toString();
   }
 
   /**
