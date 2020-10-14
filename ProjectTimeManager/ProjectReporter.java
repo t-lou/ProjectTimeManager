@@ -50,19 +50,17 @@ public class ProjectReporter {
     final long should_millis = _should_duration.toMillis();
     long balance = 0l;
     long total_time = 0l;
-    final int[] right_bounds = new int[] {700, 1600, 2500, 3400, 4400, 5400, 6400};
+    final int[] right_bounds = new int[] {700, 1600, 2500, 3400, 4400, 5400};
     final String cell_def =
         Arrays.stream(right_bounds)
             .mapToObj(i -> "\\cellx" + Integer.toString(i))
             .reduce("", (s, a) -> s + a);
-    String text_should_duration = Interval.getTextForDuration(_should_duration);
 
     table += "\\trowd \\trqc " + cell_def + _sep;
     table += formatCell("Date");
     table += formatCell("Start");
     table += formatCell("End");
     table += formatCell("Elapsed");
-    table += formatCell("");
     table += formatCell("Sum");
     table += formatCell("Change");
     table += "\\row \\pard" + _sep;
@@ -86,23 +84,22 @@ public class ProjectReporter {
         table += formatCell(Interval.trimTimeInDay(interval.formatStartTime()));
         table += formatCell(Interval.trimTimeInDay(interval.formatEndTime()));
         table += formatCell(interval.getTextForDuration());
-        table += formatCell(text_should_duration);
         table += formatCell(text_day_sum);
         table += formatCell(text_delta);
         table += "\\row \\pard" + _sep;
 
         text_date = "";
-        text_should_duration = "";
         text_day_sum = "";
         text_delta = "";
       }
     }
     final String summary =
         String.format(
-            "The total working time for the %d days with time tracking is %s, the balance for this period is %s.",
+            "The total working time for the %d days with time tracking is %s, the balance for this period is %s (with %s planned per day).",
             intervals_per_day.size(),
             Interval.removeSpaces(Interval.getTextForDuration(Duration.ofMillis(total_time))),
-            Interval.formatDurationMillis(balance));
+            Interval.formatDurationMillis(balance),
+            Interval.getTextForDuration(_should_duration).replace(" ", ""));
     table += "\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep;
     return table;
   }
