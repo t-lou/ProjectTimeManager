@@ -161,6 +161,10 @@ public class ProjectReporter {
   public static HashMap<String, String> loadConfigItems() {
     HashMap<String, String> config = null;
 
+    if (!Files.exists(Paths.get(_path_config))) {
+      return config;
+    }
+
     try {
       final FileInputStream in_stream = new FileInputStream(_path_config);
       final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
