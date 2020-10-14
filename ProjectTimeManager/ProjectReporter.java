@@ -27,9 +27,9 @@ public class ProjectReporter {
 
   private String createGreeting() {
     final String start_date_str =
-        Interval.getMonthAndYear(_time_manager.getIntervals().get(0).getStartTime());
+        Interval.formatMonth(_time_manager.getIntervals().get(0).getStartTime());
     final String formatted_date =
-        String.format("\\qr \\sb300 {\\loch %s}", Interval.getDate(LocalDateTime.now()));
+        String.format("\\qr \\sb300 {\\loch %s}", Interval.formatDate(LocalDateTime.now()));
     String content = "";
     content += formatted_date + _sep;
     content += "\\par \\pard \\sb300 \\plain {\\loch Dear " + _name + ",}" + _sep;
@@ -72,8 +72,8 @@ public class ProjectReporter {
       final ArrayList<Interval> intervals_in_day = intervals_per_day.get(day);
       final long elapsed_millis =
           intervals_in_day.stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
-      String text_day_sum = Interval.getTextForDuration(Duration.ofMillis(elapsed_millis));
-      String text_date = intervals_in_day.get(0).getDateInYear();
+      String text_day_sum = Interval.formatDuration(Duration.ofMillis(elapsed_millis));
+      String text_date = intervals_in_day.get(0).formatDateInYear();
       String text_delta = Interval.formatDurationMillis(elapsed_millis - should_millis);
       balance += (elapsed_millis - should_millis);
       total_time += elapsed_millis;
@@ -81,9 +81,9 @@ public class ProjectReporter {
       for (final Interval interval : intervals_in_day) {
         table += "\\trowd \\trqc " + cell_def + _sep;
         table += formatCell(text_date);
-        table += formatCell(Interval.trimTimeInDay(interval.formatStartTime()));
-        table += formatCell(Interval.trimTimeInDay(interval.formatEndTime()));
-        table += formatCell(interval.getTextForDuration());
+        table += formatCell(Interval.formatClockTime(interval.getStartTime()));
+        table += formatCell(Interval.formatClockTime(interval.getEndTime()));
+        table += formatCell(interval.formatDuration());
         table += formatCell(text_day_sum);
         table += formatCell(text_delta);
         table += "\\row \\pard" + _sep;
@@ -97,9 +97,9 @@ public class ProjectReporter {
         String.format(
             "The total working time for the %d days with time tracking is %s, the balance for this period is %s (with %s planned per day).",
             intervals_per_day.size(),
-            Interval.removeSpaces(Interval.getTextForDuration(Duration.ofMillis(total_time))),
+            Interval.removeSpaces(Interval.formatDuration(Duration.ofMillis(total_time))),
             Interval.formatDurationMillis(balance),
-            Interval.getTextForDuration(_should_duration).replace(" ", ""));
+            Interval.formatDuration(_should_duration).replace(" ", ""));
     table += "\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep;
     return table;
   }

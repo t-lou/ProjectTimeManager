@@ -86,8 +86,6 @@ public class ProjectManager {
 
     if (isProjectAvailable()) {
       _log_manager.readLog(_filename);
-    } else {
-      System.out.println("Project " + project_name + " does not exist.");
     }
   }
 

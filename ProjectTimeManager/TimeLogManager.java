@@ -41,7 +41,7 @@ public class TimeLogManager {
     List<String> contents = new LinkedList<String>();
 
     for (Interval interval : _time_entries) {
-      contents.add(interval.formatDateTime());
+      contents.add(interval.formatInterval());
     }
 
     writeFile(filename, contents);
@@ -212,7 +212,7 @@ public class TimeLogManager {
 
   /** Get one id name for current month for check in. */
   public static String getCurrnetMonthId() {
-    return Interval.getMonthId(LocalDateTime.now());
+    return Interval.formatMonth(LocalDateTime.now());
   }
 
   public static void updateThisSession(final String filename, final String text) {
@@ -224,7 +224,7 @@ public class TimeLogManager {
   }
 
   public void updateThisSession(final String filename) {
-    updateThisSession(filename, new Interval(_time_start, LocalDateTime.now()).formatDateTime());
+    updateThisSession(filename, new Interval(_time_start, LocalDateTime.now()).formatInterval());
   }
 
   public TimeLogManager() {}

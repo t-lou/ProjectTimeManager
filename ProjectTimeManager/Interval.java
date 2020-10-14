@@ -6,16 +6,25 @@ import java.time.format.DateTimeFormatter;
 
 public class Interval {
   /** Starting time. */
-  private LocalDateTime _time_start;
+  private final LocalDateTime _time_start;
 
   /** End time. */
-  private LocalDateTime _time_end;
-
-  /** The pattern for saving the timestamp in text. */
-  private static String _pattern = "dd/MM/yyyy HH:mm:ss";
+  private final LocalDateTime _time_end;
 
   /** The formatter between timestamp and text. */
-  private static DateTimeFormatter _formatter = DateTimeFormatter.ofPattern(_pattern);
+  private static DateTimeFormatter _formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+  /** Time format for yyyy-MM-dd. */
+  private static DateTimeFormatter _formatter_date = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  /** Time format for MM-dd. */
+  private static DateTimeFormatter _formatter_date_in_year = DateTimeFormatter.ofPattern("MM-dd");
+
+  /** The format for getting month id. */
+  private static DateTimeFormatter _formatter_month = DateTimeFormatter.ofPattern("yyyy-MM");
+
+  /** The format for getting clock time. */
+  private static DateTimeFormatter _formatter_clock = DateTimeFormatter.ofPattern("HH:mm:ss");
 
   /**
    * Read and parse the timestamp from the given text.
@@ -34,7 +43,7 @@ public class Interval {
    * @return The text representing the time in one day.
    */
   public static String trimTimeInDay(final String formatted_data) {
-    return formatted_data.substring(11);
+    return formatted_data.substring(formatted_data.indexOf(' ') + 1);
   }
 
   /** Get the formatted time to present the start time. */
@@ -52,7 +61,7 @@ public class Interval {
    *
    * @return The text for this timestamp.
    */
-  public String formatDateTime() {
+  public String formatInterval() {
     return formatStartTime() + " - " + formatEndTime();
   }
 
@@ -71,25 +80,18 @@ public class Interval {
    * @param duration Duration to show.
    * @return Text which shows the duration.
    */
-  public static String getTextForDuration(final Duration duration) {
-    final String text =
-        String.format(
-            "%3d:%02d:%02d",
-            duration.toHours(),
-            duration.toMinutes() - duration.toHours() * 60L,
-            duration.toMillis() / 1000L - duration.toMinutes() * 60L);
-
-    return text;
+  public static String formatDuration(final Duration duration) {
+    return LocalDateTime.of(1992, 01, 15, 00, 00).plus(duration).format(_formatter_clock);
   }
 
   public static String formatDurationMillis(final long millis) {
     return (millis >= 0l ? "+" : "-")
-        + removeSpaces(getTextForDuration(Duration.ofMillis(Math.abs(millis))));
+        + removeSpaces(formatDuration(Duration.ofMillis(Math.abs(millis))));
   }
 
   /** Get the formatted text to present this duration. */
-  public String getTextForDuration() {
-    return getTextForDuration(Duration.between(_time_start, _time_end));
+  public String formatDuration() {
+    return formatDuration(Duration.between(_time_start, _time_end));
   }
 
   /**
@@ -125,40 +127,28 @@ public class Interval {
     return _time_end;
   }
 
-  /** Get the string to represent day, month, year and HH:MM:SS time. */
-  private static String[] getInfoInStrings(final LocalDateTime time) {
-    final String[] parts = time.format(_formatter).split("[/ ]");
-    assert (parts.length == 4);
-    return parts;
-  }
-
   /** Get one id to represent the month of input time. */
-  public static String getMonthId(final LocalDateTime time) {
-    final String[] parts = getInfoInStrings(time);
-    return parts[1] + "_" + parts[2];
+  public static String formatMonth(final LocalDateTime time) {
+    return time.format(_formatter_month);
   }
 
-  /** Get the formatted text to present the month for the input time (MM/YYYY). */
-  public static String getMonthAndYear(final LocalDateTime time) {
-    final String[] parts = getInfoInStrings(time);
-    return parts[1] + "/" + parts[2];
+  /** Get the formatted text to present the date for the input time (MM-DD). */
+  public static String formatDateInYear(final LocalDateTime time) {
+    return time.format(_formatter_date_in_year);
   }
 
-  /** Get the formatted text to present the date for the input time (DD/MM). */
-  public static String getDateInYear(final LocalDateTime time) {
-    final String[] parts = getInfoInStrings(time);
-    return parts[0] + "/" + parts[1];
+  /** Get the formatted text to present the date for the input time (yyyy-MM-DD). */
+  public static String formatDate(final LocalDateTime time) {
+    return time.format(_formatter_date);
   }
 
-  /** Get the formatted text to present the date for the input time (DD/MM/YYYY). */
-  public static String getDate(final LocalDateTime time) {
-    final String[] parts = getInfoInStrings(time);
-    return parts[0] + "/" + parts[1] + "/" + parts[2];
+  public static String formatClockTime(final LocalDateTime time) {
+    return time.format(_formatter_clock);
   }
 
   /** Get formatted string to represent the start date. */
-  public String getDateInYear() {
-    return getDateInYear(_time_start);
+  public String formatDateInYear() {
+    return formatDateInYear(_time_start);
   }
 
   public Interval(String text) {

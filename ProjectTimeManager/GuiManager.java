@@ -122,8 +122,8 @@ public class GuiManager {
     }
 
     final String title_date =
-        (dates == null
-            ? ""
+        ((dates == null || dates.isEmpty())
+            ? "-"
             : (dates.stream()
                 .map(date -> date.toString())
                 .map(text -> text.substring(2, text.indexOf('T')))
@@ -134,13 +134,14 @@ public class GuiManager {
     final JPanel panel = new JPanel();
 
     panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * project_names.size()));
+    panel.setPreferredSize(
+        new Dimension(_width_per_unit, _height_per_unit * Math.max(1, project_names.size())));
 
     for (final String project_name : project_names) {
       final String text =
           project_name
-              + ": "
-              + Interval.getTextForDuration(
+              + " "
+              + Interval.formatDuration(
                   Duration.ofMillis(new ProjectManager(project_name).getTotalTimeMs(dates)));
       final JButton button =
           initButton(
@@ -155,6 +156,7 @@ public class GuiManager {
     }
 
     addPanelToGui(panel);
+    addRightButtonReturn(panel);
 
     prepareGui();
   }
@@ -192,13 +194,13 @@ public class GuiManager {
       final long duration_ms =
           grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
 
-      text += ": " + Interval.getTextForDuration(Duration.ofMillis(duration_ms)) + eol;
+      text += " " + Interval.formatDuration(Duration.ofMillis(duration_ms)) + eol;
 
       text +=
           String.join(
               eol,
               grouped_log.get(day).stream()
-                  .map(interval -> interval.formatDateTime())
+                  .map(interval -> interval.formatInterval())
                   .collect(Collectors.toList()));
 
       text += eol + eol;
