@@ -183,7 +183,8 @@ public class ProjectManager {
   public static String getPendingSessionTime(final String project_name) {
     final List<String> contents =
         TimeLogManager.readFile(new ProjectManager(project_name).getPathLock());
-    assert contents != null && contents.size() == 1;
+    assert contents != null && contents.size() == 1
+        : "cannot read the unfinished session for " + project_name;
     return contents.get(0);
   }
 
@@ -205,12 +206,13 @@ public class ProjectManager {
 
   /** End this project and log the time. */
   public void end() {
-    assert (isRunning());
+    assert isRunning() : "cannot end a session which is not started";
 
     try {
       _mutex.acquire();
       _log_manager.updateLog(_filename);
-    } catch (Exception er) {
+    } catch (Exception ex) {
+      assert 1 == 2 : "error updating the log for interval";
     } finally {
       _mutex.release();
     }
@@ -228,6 +230,7 @@ public class ProjectManager {
       _mutex.acquire();
       _log_manager.updateThisSession(getPathLock());
     } catch (Exception er) {
+      assert 1 == 2 : "error updating the log with unfinished session";
     } finally {
       _mutex.release();
     }
@@ -278,7 +281,7 @@ public class ProjectManager {
         Thread.sleep(300l * 1000l);
         project.updateThisSession();
       } catch (InterruptedException ex) {
-        System.out.println("Sleep interrupted! Check date time!");
+        assert 1 == 2 : "Sleep interrupted! Check date time!";
       }
     }
   }

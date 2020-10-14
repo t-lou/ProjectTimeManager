@@ -118,6 +118,7 @@ public class TimeLogManager {
 
         br.close();
       } catch (Exception ex) {
+        assert 1 == 2 : ("error loading intervals from " + filename);
       }
     }
     return contents;
@@ -136,6 +137,7 @@ public class TimeLogManager {
 
       br.close();
     } catch (Exception ex) {
+      assert 1 == 2 : ("error writing intervals to " + filename);
       return false;
     }
     return true;

@@ -130,6 +130,7 @@ public class ProjectReporter {
 
       br.close();
     } catch (Exception ex) {
+      assert 1 == 2 : ("file writing failed on " + filename);
     }
   }
 
@@ -153,6 +154,7 @@ public class ProjectReporter {
 
       br.close();
     } catch (Exception ex) {
+      assert 1 == 2 : "error saving the config for reporter";
     }
   }
 
@@ -185,6 +187,7 @@ public class ProjectReporter {
 
       br.close();
     } catch (Exception ex) {
+      assert 1 == 2 : "error loading the config for reporter";
       return null;
     }
 

@@ -7,7 +7,12 @@ This toy project contains easy-to-use time logger with clear text log files (for
 
 # Start
 
-java Main
+- **Linux** run start.sh in terminal
+- **Windows** double click start.bat
+
+# Build
+
+run corresponding script in scripts
 
 # Operations
 
@@ -16,7 +21,7 @@ java Main
 
 # Functions
 
-- **check in** check in immediately and start a project with name MONTH_YEAR
+- **check in** check in immediately and start a project with name YEAR-MONTH
 - **start** start a new project (editable text field) or continue an existing project, hit ctrl-c when the work is
 paused or ended
 - **projects** show the sum of time for projects or select and show the log for one project
@@ -29,7 +34,7 @@ Report for project (now only tested for check-in) can be generated in RTF format
 # Logs
 
 The logs are stored in .ptm_projects separately, one file for one project. Each line defines the start and end time for
-one working session. The sessions must be timely consistent: ascending and no overlap.
+one working session. The sessions must be timely consistent: ascending and no overlap (example below is outdated).
 
 ```bash
 for i in $(ls .ptm_projects); do echo .ptm_projects/$i; cat .ptm_projects/$i; done
@@ -64,7 +69,7 @@ for i in $(ls .ptm_projects); do echo .ptm_projects/$i; cat .ptm_projects/$i; do
 
 - report examples
 
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_google_doc.png)
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_word.png)
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_wordpad.png)
-![date](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_libreoffice.png)
+![report](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_google_doc.png)
+![report](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_word.png)
+![report](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_wordpad.png)
+![report](https://github.com/t-lou/ProjectTimeManager/blob/master/doc/report_libreoffice.png)

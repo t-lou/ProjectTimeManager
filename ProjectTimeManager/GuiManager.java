@@ -228,7 +228,7 @@ public class GuiManager {
     if (preferred_dates == null || preferred_dates.isEmpty()) {
       panel.add(
           initButton(
-              "EXPORT",
+              "REPORT",
               new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                   destroyGui();
