@@ -5,5 +5,5 @@ if [[ -f PTM.jar ]]; then
     java -ea -jar PTM.jar
 else
 	echo "launch with class"
-    java -ea ProjectTimeManager.Main
+    java -ea Main
 fi

@@ -1,5 +1,7 @@
-javac ..\ProjectTimeManager\*.java
+javac Main.java
 
-jar -cvfe ..\PTM.jar ProjectTimeManager.Main ..\ProjectTimeManager\*.class
+jar cf ProjectTimeManager.jar ProjectTimeManager\*.class
+
+jar cfm PTM.jar MANIFEST.MF ProjectTimeManager.jar Main.class
 
 pause

@@ -3,5 +3,5 @@ IF EXIST PTM.jar (
   java -ea -jar PTM.jar
 ) ELSE (
   ECHO PTM.jar not exists, will call class directly
-  java -ea ProjectTimeManager.Main
+  java -ea Main
 )

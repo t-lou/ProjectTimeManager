@@ -10,6 +10,9 @@ This toy project contains easy-to-use time logger with clear text log files (for
 - **Linux** run start.sh in terminal
 - **Windows** double click start.bat
 
+This program is written in Java, JDK is necessary for compilation and JRE for execution (please be aware of the paths on Windows).
+It is tested on JDK 8 and OpenJDK 14.
+
 # Build
 
 run corresponding script in scripts
