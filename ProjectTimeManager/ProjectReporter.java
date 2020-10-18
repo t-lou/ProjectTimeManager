@@ -9,10 +9,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 public class ProjectReporter {
-
+  private final String _project_name;
   private final TimeLogManager _time_manager;
 
   private static final String _doc_head = "{\\rtf1\\ansi\\deff0";
@@ -25,28 +27,38 @@ public class ProjectReporter {
   private final String _name;
   private final Duration _should_duration;
 
-  private String createGreeting() {
-    final String start_date_str =
-        Interval.formatMonth(_time_manager.getIntervals().get(0).getStartTime());
+  private List<String> createGreeting() {
+    List<String> content = new LinkedList<String>();
     final String formatted_date =
         String.format("\\qr \\sb300 {\\loch %s}", Interval.formatDate(LocalDateTime.now()));
-    String content = "";
-    content += formatted_date + _sep;
-    content += "\\par \\pard \\sb300 \\plain {\\loch Dear " + _name + ",}" + _sep;
-    content +=
-        "\\par \\pard \\sb300 \\sa300 \\plain {\\loch your working time in "
-            + start_date_str
-            + " is as follows:}"
-            + _sep;
+    content.add(formatted_date);
+    content.add(String.format("\\par \\pard \\sb300 \\plain {\\loch Dear %s,}", _name));
     return content;
   }
 
   private static String formatCell(final String content) {
-    return "\\intbl " + Interval.removeSpaces(content) + " \\cell" + _sep;
+    return "\\intbl " + content + " \\cell";
   }
 
-  private String createTable() {
-    String table = "\\par \\sb200 \\qc" + _sep;
+  private List<String> createTable() {
+    final Map<Long, ArrayList<Interval>> intervals_per_day = _time_manager.getGroupedIntervals();
+    List<Long> sorted_days = new ArrayList<>(intervals_per_day.keySet());
+    Collections.sort(sorted_days);
+
+    assert !sorted_days.isEmpty() : "not interval found for the report";
+
+    final String start_date_str =
+        Interval.formatDate(intervals_per_day.get(sorted_days.get(0)).get(0).getStartTime());
+    final String end_date_str =
+        Interval.formatDate(
+            intervals_per_day.get(sorted_days.get(sorted_days.size() - 1)).get(0).getStartTime());
+
+    List<String> table = new LinkedList<String>();
+    table.add(
+        String.format(
+            "\\par \\pard \\sb300 \\sa300 \\plain {\\loch your working time in %s from %s to %s is as follows:}",
+            _project_name, start_date_str, end_date_str));
+    table.add("\\par \\sb200 \\qc");
     final long should_millis = _should_duration.toMillis();
     long balance = 0l;
     long total_time = 0l;
@@ -56,18 +68,14 @@ public class ProjectReporter {
             .mapToObj(i -> "\\cellx" + Integer.toString(i))
             .reduce("", (s, a) -> s + a);
 
-    table += "\\trowd \\trqc " + cell_def + _sep;
-    table += formatCell("Date");
-    table += formatCell("Start");
-    table += formatCell("End");
-    table += formatCell("Elapsed");
-    table += formatCell("Sum");
-    table += formatCell("Change");
-    table += "\\row \\pard" + _sep;
-
-    final Map<Long, ArrayList<Interval>> intervals_per_day = _time_manager.getGroupedIntervals();
-    ArrayList<Long> sorted_days = new ArrayList<>(intervals_per_day.keySet());
-    Collections.sort(sorted_days);
+    table.add("\\trowd \\trqc " + cell_def + _sep);
+    table.add(formatCell("Date"));
+    table.add(formatCell("Start"));
+    table.add(formatCell("End"));
+    table.add(formatCell("Elapsed"));
+    table.add(formatCell("Sum"));
+    table.add(formatCell("Change"));
+    table.add("\\row \\pard" + _sep);
     for (final Long day : sorted_days) {
       final ArrayList<Interval> intervals_in_day = intervals_per_day.get(day);
       final long elapsed_millis =
@@ -79,14 +87,14 @@ public class ProjectReporter {
       total_time += elapsed_millis;
 
       for (final Interval interval : intervals_in_day) {
-        table += "\\trowd \\trqc " + cell_def + _sep;
-        table += formatCell(text_date);
-        table += formatCell(Interval.formatClockTime(interval.getStartTime()));
-        table += formatCell(Interval.formatClockTime(interval.getEndTime()));
-        table += formatCell(interval.formatDuration());
-        table += formatCell(text_day_sum);
-        table += formatCell(text_delta);
-        table += "\\row \\pard" + _sep;
+        table.add("\\trowd \\trqc " + cell_def);
+        table.add(formatCell(text_date));
+        table.add(formatCell(Interval.formatClockTime(interval.getStartTime())));
+        table.add(formatCell(Interval.formatClockTime(interval.getEndTime())));
+        table.add(formatCell(interval.formatDuration()));
+        table.add(formatCell(text_day_sum));
+        table.add(formatCell(text_delta));
+        table.add("\\row \\pard");
 
         text_date = "";
         text_day_sum = "";
@@ -100,38 +108,32 @@ public class ProjectReporter {
             Interval.removeSpaces(Interval.formatDuration(Duration.ofMillis(total_time))),
             Interval.formatDurationMillis(balance),
             Interval.formatDuration(_should_duration).replace(" ", ""));
-    table += "\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep;
+    table.add("\\par \\pard \\sb300 \\plain {\\loch " + summary + "}" + _sep);
     return table;
   }
 
-  private String createGreetingAgain() {
-    String text = "\\par \\pard \\sb300 \\plain {\\loch Sincerely yours}" + _sep;
-    text += "\\par \\pard \\sb300 \\plain {\\loch ProjectTimeManager from t-lou}" + _sep;
-    return text;
+  private List<String> createGreetingAgain() {
+    List<String> contents = new LinkedList<String>();
+    contents.add("\\par \\pard \\sb300 \\plain {\\loch Sincerely yours}");
+    contents.add("\\par \\pard \\sb300 \\plain {\\loch ProjectTimeManager from t-lou}");
+    return contents;
   }
 
   public void output(final String filename) {
-    try {
-      FileOutputStream out_stream = new FileOutputStream(filename, false);
-      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
+    List<String> contents = new LinkedList<String>();
 
-      br.write(_doc_head);
-      br.newLine();
-      br.newLine();
-      br.write(createGreeting());
-      br.newLine();
-      br.write(createTable());
-      br.newLine();
-      br.write(createGreetingAgain());
-      br.newLine();
-      br.write(_doc_end);
-      br.newLine();
-      br.flush();
+    contents.add(_doc_head);
+    contents.add("");
+    contents.addAll(createGreeting());
+    contents.add("");
+    contents.addAll(createTable());
+    contents.add("");
+    contents.addAll(createGreetingAgain());
+    contents.add("");
+    contents.add(_doc_end);
+    contents.add("");
 
-      br.close();
-    } catch (Exception ex) {
-      assert 1 == 2 : ("file writing failed on " + filename);
-    }
+    Utils.writeFile(filename, contents);
   }
 
   public static boolean isConfigReady() {
@@ -143,19 +145,11 @@ public class ProjectReporter {
   }
 
   public static void saveConfigItems(final HashMap<String, String> config) {
-    try {
-      FileOutputStream out_stream = new FileOutputStream(_path_config, false);
-      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
-
-      for (Map.Entry<String, String> entry : config.entrySet()) {
-        br.write(entry.getKey() + ": " + entry.getValue());
-        br.newLine();
-      }
-
-      br.close();
-    } catch (Exception ex) {
-      assert 1 == 2 : "error saving the config for reporter";
+    List<String> contents = new LinkedList<String>();
+    for (Map.Entry<String, String> entry : config.entrySet()) {
+      contents.add(entry.getKey() + ": " + entry.getValue());
     }
+    Utils.writeFile(_path_config, contents);
   }
 
   public static HashMap<String, String> loadConfigItems() {
@@ -166,14 +160,7 @@ public class ProjectReporter {
     }
 
     try {
-      final FileInputStream in_stream = new FileInputStream(_path_config);
-      final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
-
-      while (true) {
-        String line = br.readLine();
-        if (line == null || line.isEmpty()) {
-          break;
-        }
+      for (String line : Utils.readFile(_path_config)) {
         assert (line.chars().map(ch -> (ch == ':' ? 1 : 0)).sum() == 1);
         final int sep = line.indexOf(':');
         final String key = line.substring(0, sep);
@@ -188,8 +175,6 @@ public class ProjectReporter {
           config.put(key, value);
         }
       }
-
-      br.close();
     } catch (Exception ex) {
       assert 1 == 2 : "error loading the config for reporter";
       return null;
@@ -198,8 +183,9 @@ public class ProjectReporter {
     return config;
   }
 
-  public ProjectReporter(final TimeLogManager time_manager) {
-    _time_manager = time_manager;
+  public ProjectReporter(final String project_name) {
+    _project_name = project_name;
+    _time_manager = new ProjectManager(project_name).getLogManager();
 
     final HashMap<String, String> config = loadConfigItems();
     _name = config.get(_key_name);

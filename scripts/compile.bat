@@ -1,3 +1,5 @@
+CD ..
+
 javac Main.java
 
 jar cf ProjectTimeManager.jar ProjectTimeManager\*.class

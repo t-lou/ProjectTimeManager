@@ -1,11 +1,9 @@
 package ProjectTimeManager;
 
-import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,11 +42,12 @@ public class TimeLogManager {
       contents.add(interval.formatInterval());
     }
 
-    writeFile(filename, contents);
+    Utils.writeFile(filename, contents);
   }
 
   public void closeNow() {
     _time_entries.add(new Interval(_time_start, LocalDateTime.now()));
+    assert areLogsOrdered() : "intervals are not in order";
   }
 
   /**
@@ -85,61 +84,14 @@ public class TimeLogManager {
   }
 
   public boolean addLog(final String filename) {
-    final List<String> contents = readFile(filename);
+    final List<String> contents = Utils.readFile(filename);
     if (contents == null || contents.isEmpty()) {
       return false;
     }
     for (final String line : contents) {
       _time_entries.add(new Interval(line));
     }
-    if (!areLogsOrdered()) {
-      System.out.println("Logs are not aligned.");
-    }
-    return true;
-  }
-
-  public static List<String> readFile(final String filename) {
-    List<String> contents = null;
-    final File file = new File(filename);
-    if (file.canRead()) {
-      try {
-        final FileInputStream in_stream = new FileInputStream(file);
-        final BufferedReader br = new BufferedReader(new InputStreamReader(in_stream));
-
-        contents = new LinkedList<String>();
-        final List<String> ends = Arrays.asList(new String[] {"", "\n", "\r", null});
-        while (true) {
-          final String line = br.readLine();
-          if (ends.contains(line)) {
-            break;
-          }
-          contents.add(line);
-        }
-
-        br.close();
-      } catch (Exception ex) {
-        assert 1 == 2 : ("error loading intervals from " + filename);
-      }
-    }
-    return contents;
-  }
-
-  public static boolean writeFile(final String filename, final List<String> contents) {
-    File file = new File(filename);
-    try {
-      FileOutputStream out_stream = new FileOutputStream(file, false);
-      BufferedWriter br = new BufferedWriter(new OutputStreamWriter(out_stream));
-      for (final String content : contents) {
-        br.write(content);
-        br.newLine();
-      }
-      br.flush();
-
-      br.close();
-    } catch (Exception ex) {
-      assert 1 == 2 : ("error writing intervals to " + filename);
-      return false;
-    }
+    assert areLogsOrdered() : "logs are not aligned in file " + filename;
     return true;
   }
 
@@ -218,11 +170,9 @@ public class TimeLogManager {
   }
 
   public static void updateThisSession(final String filename, final String text) {
-
     List<String> contents = new LinkedList<String>();
     contents.add(text);
-
-    writeFile(filename, contents);
+    Utils.writeFile(filename, contents);
   }
 
   public void updateThisSession(final String filename) {

@@ -284,7 +284,7 @@ public class GuiManager {
       filename += ".rtf";
     }
 
-    new ProjectReporter(new ProjectManager(project_name).getLogManager()).output(filename);
+    new ProjectReporter(project_name).output(filename);
   }
 
   private void generateReportAfterConfig(final String project_name) {
@@ -368,6 +368,7 @@ public class GuiManager {
               // check whether the format is correct TODO
               ProjectManager.updatePendingSessionTime(project_name, field_edit_start.getText());
               ProjectManager.finishLastSession(project_name);
+              new ProjectManager(project_name).deleteLock();
               ProjectManager.startProject(project_name);
             }
           });

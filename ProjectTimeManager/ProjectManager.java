@@ -181,8 +181,7 @@ public class ProjectManager {
   }
 
   public static String getPendingSessionTime(final String project_name) {
-    final List<String> contents =
-        TimeLogManager.readFile(new ProjectManager(project_name).getPathLock());
+    final List<String> contents = Utils.readFile(new ProjectManager(project_name).getPathLock());
     assert contents != null && contents.size() == 1
         : "cannot read the unfinished session for " + project_name;
     return contents.get(0);
@@ -251,10 +250,20 @@ public class ProjectManager {
 
   public static void finishLastSession(final String project_name) {
     ProjectManager project = new ProjectManager(project_name);
+    final String path_lock = project.getPathLock();
+    final String path_log = getLogFilename(project_name);
     if (project.isRunning()) {
-      project.getLogManager().addLog(project.getPathLock());
+      assert new File(path_lock).exists() : String.format("file %s cannot be found", path_lock);
+      final int count_line_before = Utils.countFileLine(path_log);
+
+      project.getLogManager().addLog(path_lock);
       project.end();
+
+      final int count_line_after = Utils.countFileLine(path_log);
+      assert (count_line_before + 1) == count_line_after
+          : "after updateThisSession one more session should be in log";
     }
+    assert !(new File(path_lock).exists()) : String.format("file %s should be deleted", path_lock);
   }
 
   /**
@@ -270,7 +279,8 @@ public class ProjectManager {
             new Thread() {
               public void run() {
                 System.out.println(
-                    "Project " + project_name + " ends at " + LocalDateTime.now().toString());
+                    String.format(
+                        "project %s ends at %s", project_name, LocalDateTime.now().toString()));
                 project._log_manager.closeNow();
                 project.end();
               }

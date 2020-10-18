@@ -1,4 +1,4 @@
 *.class
 .ptm_projects
 .config
-PTM.jar
+*.jar
