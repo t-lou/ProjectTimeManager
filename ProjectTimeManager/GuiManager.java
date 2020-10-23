@@ -1,28 +1,26 @@
 package ProjectTimeManager;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class GuiManager {
   /** Width of one unit (button or text field). */
-  private static final int _width_per_unit = 400;
+  private static final int _width_per_unit = 360;
 
   /** Height of one unit (button or text field). */
-  private static final int _height_per_unit = 100;
+  private static final int _height_per_unit = 90;
 
   /** Overhead for one unit, to improve the visualization of GUI. */
   private static final int _size_overhead = 10;
@@ -37,16 +35,10 @@ public class GuiManager {
   private static final Color _colour_boundary = Color.LIGHT_GRAY;
 
   /** The object for GUI. */
-  private JFrame _gui;
+  private JFrame _gui = null;
 
   /** The size of one unit, button or text field. */
-  private static final Dimension _dimension =
-      new Dimension(_width_per_unit, _height_per_unit - _size_overhead);
-
-  /** The size of the whole GUI. */
-  private static final Dimension _dimension_gui =
-      new Dimension(
-          _width_per_unit + _size_overhead * 2, _height_per_unit * 5 - _size_overhead * 2);
+  private static final Dimension _dimension = new Dimension(_width_per_unit, _height_per_unit);
 
   /**
    * Initialize button with text and predefined looks.
@@ -65,20 +57,48 @@ public class GuiManager {
 
   /** Close the current GUI session. */
   private void destroyGui() {
-    _gui.setVisible(false);
-    _gui.dispose();
-    _gui = null;
+    if (_gui != null) {
+      _gui.setVisible(false);
+      _gui.dispose();
+      _gui = null;
+    }
   }
 
   /**
-   * Add panel to a scrollable panel, after that the GUI contains only this panel for simplicity.
+   * Clean and initilize GUI with given title and one filled panel, and return the panel.
    *
-   * @param panel The panel to add.
+   * @param title Title of the window.
+   * @return The panel to place buttons, texts and other GUI components.
    */
-  private void addPanelToGui(final JPanel panel) {
-    final JScrollPane scrollable = new JScrollPane(panel);
-    scrollable.setPreferredSize(_dimension_gui);
+  private JPanel initGuiWithPanel(final String title) {
+    destroyGui();
+
+    _gui = new JFrame(title);
+    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+    JPanel panel = new JPanel();
+
+    panel.setBackground(_colour_boundary);
+    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 4));
+
+    JScrollPane scrollable = new JScrollPane(panel);
+    scrollable.setPreferredSize(
+        new Dimension(
+            _width_per_unit + _size_overhead * 2, _height_per_unit * 4 + _size_overhead * 3));
     _gui.add(scrollable);
+
+    panel.addMouseListener(
+        new MouseAdapter() {
+          @Override
+          public void mousePressed(MouseEvent e) {
+            if (SwingUtilities.isRightMouseButton(e)) {
+              destroyGui();
+              mainMenu();
+            }
+          }
+        });
+
+    return panel;
   }
 
   /** Show the GUI. */
@@ -93,34 +113,12 @@ public class GuiManager {
   }
 
   /**
-   * Add mouse action: right click the empty space and return to root menu.
-   *
-   * @param panel The panel to change.
-   */
-  private void addRightButtonReturn(final JPanel panel) {
-    panel.addMouseListener(
-        new MouseAdapter() {
-          @Override
-          public void mousePressed(MouseEvent e) {
-            if (SwingUtilities.isRightMouseButton(e)) {
-              destroyGui();
-              mainMenu();
-            }
-          }
-        });
-  }
-
-  /**
    * Show the given projects.
    *
    * @param project_names Names of the given projects.
    */
   private void showProjectList(
       final ArrayList<String> project_names, final ArrayList<Instant> dates) {
-    if (_gui != null) {
-      destroyGui();
-    }
-
     final String title_date =
         ((dates == null || dates.isEmpty())
             ? "-"
@@ -128,14 +126,8 @@ public class GuiManager {
                 .map(date -> date.toString())
                 .map(text -> text.substring(2, text.indexOf('T')))
                 .reduce("", (s, t) -> (" " + s + t))));
-    _gui = new JFrame("List of projects" + title_date);
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-    final JPanel panel = new JPanel();
-
-    panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(
-        new Dimension(_width_per_unit, _height_per_unit * Math.max(1, project_names.size())));
+    JPanel panel = initGuiWithPanel("List of projects" + title_date);
 
     for (final String project_name : project_names) {
       final String text =
@@ -155,57 +147,7 @@ public class GuiManager {
       panel.add(button);
     }
 
-    addPanelToGui(panel);
-    addRightButtonReturn(panel);
-
     prepareGui();
-  }
-
-  /**
-   * Show the simple summary of a project.
-   *
-   * @param project_names Names of the given projects.
-   * @param preferred_dates Which days to summarize.
-   */
-  private String getProjectSummary(final String project_name, ArrayList<Instant> preferred_dates) {
-    final HashMap<Long, ArrayList<Interval>> grouped_log =
-        new ProjectManager(project_name).getGroupedLog();
-
-    final ArrayList<Instant> dates =
-        (preferred_dates != null) ? preferred_dates : ProjectManager.getListDates();
-
-    final ArrayList<Long> dates_as_key =
-        dates.stream()
-            .map(date -> (date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY))
-            .collect(Collectors.toCollection(ArrayList::new));
-
-    final ArrayList<Long> keys =
-        new ArrayList<>(grouped_log.keySet())
-            .stream()
-                .filter(date -> dates_as_key.contains(date))
-                .sorted()
-                .collect(Collectors.toCollection(ArrayList::new));
-
-    final String eol = System.lineSeparator();
-    String text = "";
-    for (final Long day : keys) {
-      text += Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString().split("T")[0];
-
-      final long duration_ms =
-          grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
-
-      text += " " + Interval.formatDuration(Duration.ofMillis(duration_ms)) + eol;
-
-      text +=
-          String.join(
-              eol,
-              grouped_log.get(day).stream()
-                  .map(interval -> interval.formatInterval())
-                  .collect(Collectors.toList()));
-
-      text += eol + eol;
-    }
-    return text;
   }
 
   /**
@@ -214,16 +156,7 @@ public class GuiManager {
    * @param project_name The name of The project.
    */
   private void showProject(final String project_name, ArrayList<Instant> preferred_dates) {
-    if (_gui != null) {
-      destroyGui();
-    }
-
-    _gui = new JFrame("More on Project " + project_name);
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    final JPanel panel = new JPanel();
-
-    panel.setBackground(_colour_boundary);
+    JPanel panel = initGuiWithPanel("More on Project " + project_name);
 
     if (preferred_dates == null || preferred_dates.isEmpty()) {
       panel.add(
@@ -245,11 +178,12 @@ public class GuiManager {
               new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                   ProjectManager.deleteProject(project_name);
+                  showProjectList();
                 }
               }));
     }
 
-    final String text = getProjectSummary(project_name, preferred_dates);
+    final String text = new ProjectManager(project_name).getProjectSummary(preferred_dates);
     JTextArea label = new JTextArea(text);
 
     final int num_line =
@@ -258,46 +192,32 @@ public class GuiManager {
             .map(end -> text.chars().map(ch -> (ch == end ? 1 : 0)).sum())
             .max()
             .getAsInt();
-    final int num_panel_for_text = (int) Math.ceil((float) num_line / 6.0);
-    label.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * num_panel_for_text));
+    label.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * num_line / 6));
     // center alignment not working
     // label.setAlignmentY(JTextArea.CENTER_ALIGNMENT);
     // label.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
     panel.add(label);
 
-    panel.setPreferredSize(
-        new Dimension(_width_per_unit, _height_per_unit * (num_panel_for_text + 2)));
-
-    addRightButtonReturn(panel);
-    addPanelToGui(panel);
-
     prepareGui();
   }
 
   private void generateReport(final String project_name) {
+    final String format = "rtf";
+    final String ext = "." + format;
     final JFileChooser chooser = new JFileChooser();
-    chooser.setFileFilter(new FileNameExtensionFilter("rtf", "rtf"));
+    chooser.setFileFilter(new FileNameExtensionFilter(format, format));
     chooser.showOpenDialog(null);
 
     String filename = chooser.getSelectedFile().getAbsolutePath();
-    if (filename.length() <= 4 || !filename.substring(filename.length() - 4).equals(".rtf")) {
-      filename += ".rtf";
+    if (filename.length() <= 4 || !filename.substring(filename.length() - 4).equals(ext)) {
+      filename += ext;
     }
 
     new ProjectReporter(project_name).output(filename);
   }
 
   private void generateReportAfterConfig(final String project_name) {
-    if (_gui != null) {
-      destroyGui();
-    }
-
-    _gui = new JFrame("Configuration for reporter");
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    final JPanel panel = new JPanel();
-    panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 5));
+    JPanel panel = initGuiWithPanel("Configuration for reporter");
 
     HashMap<String, String> pre_config = ProjectReporter.loadConfigItems();
     HashMap<String, JTextField> text_fields = new HashMap<String, JTextField>();
@@ -305,14 +225,14 @@ public class GuiManager {
       JLabel label = new JLabel(item);
       label.setPreferredSize(new Dimension(_dimension.width, _dimension.height / 3));
       label.setHorizontalAlignment(JTextField.CENTER);
-      panel.add(label, BorderLayout.CENTER);
+      panel.add(label);
       JTextField field = new JTextField();
       field.setPreferredSize(new Dimension(_dimension.width, _dimension.height / 3));
       field.setHorizontalAlignment(JTextField.CENTER);
       if (pre_config != null && pre_config.containsKey(item)) {
         field.setText(pre_config.get(item));
       }
-      panel.add(field, BorderLayout.CENTER);
+      panel.add(field);
       text_fields.put(item, field);
     }
     panel.add(
@@ -333,26 +253,18 @@ public class GuiManager {
               }
             }));
 
-    addRightButtonReturn(panel);
-    addPanelToGui(panel);
-
     prepareGui();
   }
 
   private void checkAndStartProject(final String project_name) {
     if (new ProjectManager(project_name).isRunning()) {
-      if (_gui != null) {
-        destroyGui();
-      }
-
       final JButton button_delete_start =
           initButton(
               "DELETE && START",
               new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                   destroyGui();
-                  new ProjectManager(project_name).deleteLock();
-                  ProjectManager.startProject(project_name);
+                  ProjectManager.skipPendingSessionAndStart(project_name);
                 }
               });
 
@@ -365,27 +277,14 @@ public class GuiManager {
             @Override
             public void actionPerformed(ActionEvent e) {
               destroyGui();
-              // check whether the format is correct TODO
-              ProjectManager.updatePendingSessionTime(project_name, field_edit_start.getText());
-              ProjectManager.finishLastSession(project_name);
-              new ProjectManager(project_name).deleteLock();
-              ProjectManager.startProject(project_name);
+              ProjectManager.finishPendingSessionAndStart(project_name, field_edit_start.getText());
             }
           });
 
-      final JPanel panel = new JPanel();
-
-      panel.setBackground(_colour_boundary);
-      panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 5));
+      JPanel panel = initGuiWithPanel("Configuration for reporter");
 
       panel.add(button_delete_start);
-      panel.add(field_edit_start, BorderLayout.CENTER);
-
-      addRightButtonReturn(panel);
-
-      _gui = new JFrame("Configuration for reporter");
-      _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      addPanelToGui(panel);
+      panel.add(field_edit_start);
 
       prepareGui();
 
@@ -396,19 +295,9 @@ public class GuiManager {
 
   /** Show the main menu for starting one project, either available or new. */
   private void startProjectMenu() {
-    if (_gui != null) {
-      destroyGui();
-    }
-
     final ArrayList<String> project_names = ProjectManager.getListProject();
 
-    _gui = new JFrame("Choose Project to Start");
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    final JPanel panel = new JPanel();
-    panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(
-        new Dimension(_width_per_unit, _height_per_unit * (project_names.size() + 1)));
+    JPanel panel = initGuiWithPanel("Choose Project to Start");
 
     final JTextField field = new JTextField();
     field.setPreferredSize(_dimension);
@@ -423,7 +312,7 @@ public class GuiManager {
             checkAndStartProject(field.getText());
           }
         });
-    panel.add(field, BorderLayout.CENTER);
+    panel.add(field);
 
     for (final String project_name : project_names) {
       final JButton button =
@@ -440,28 +329,16 @@ public class GuiManager {
       panel.add(button);
     }
 
-    addRightButtonReturn(panel);
-    addPanelToGui(panel);
-
     prepareGui();
   }
 
   /** Create the GUI for selecting the date to show. */
   private void startDateMenu(ArrayList<Instant> dates) {
-    if (_gui != null) {
-      destroyGui();
-    }
-
     if (dates == null) {
       dates = ProjectManager.getListDates();
     }
 
-    _gui = new JFrame("Choose date to inquire");
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-    final JPanel panel = new JPanel();
-    panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * dates.size()));
+    JPanel panel = initGuiWithPanel("Choose date to inquire");
 
     for (final Instant date : dates) {
       final String text_date = date.toString().split("T")[0];
@@ -470,14 +347,10 @@ public class GuiManager {
               text_date,
               new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                  final String template = "yyyy-MM-dd HH:mm:ss";
-
-                  final String string_date = text_date + " 00:00:00";
                   final Instant date =
                       Instant.ofEpochSecond(
                           TimeLogManager.getSecondStartOfDay(
-                              LocalDateTime.parse(
-                                  string_date, DateTimeFormatter.ofPattern(template))));
+                              Interval.parseDateTime(text_date + " 00:00:00")));
 
                   showProjectList(
                       ProjectManager.getListProjectWithData(date),
@@ -488,21 +361,11 @@ public class GuiManager {
       panel.add(button);
     }
 
-    addRightButtonReturn(panel);
-    addPanelToGui(panel);
-
     prepareGui();
   }
 
   /** Show the main menu. */
   private void mainMenu() {
-    if (_gui != null) {
-      destroyGui();
-    }
-
-    _gui = new JFrame("Project Time Manager");
-    _gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     final JButton button_checkin =
         initButton(
             "CHECK IN",
@@ -538,17 +401,12 @@ public class GuiManager {
               }
             });
 
-    final JPanel panel = new JPanel();
-
-    panel.setBackground(_colour_boundary);
-    panel.setPreferredSize(new Dimension(_width_per_unit, _height_per_unit * 2));
+    JPanel panel = initGuiWithPanel("Project Time Manager");
 
     panel.add(button_checkin);
     panel.add(button_start);
     panel.add(button_list);
     panel.add(button_date);
-
-    addPanelToGui(panel);
 
     prepareGui();
   }

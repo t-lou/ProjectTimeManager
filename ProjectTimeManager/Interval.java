@@ -32,7 +32,7 @@ public class Interval {
    * @param text The text to read.
    * @return The timestamp represented in the given text.
    */
-  private static LocalDateTime parseDateTime(String text) {
+  public static LocalDateTime parseDateTime(String text) {
     return LocalDateTime.parse(text, _formatter);
   }
 
@@ -142,6 +142,7 @@ public class Interval {
     return time.format(_formatter_date);
   }
 
+  /** Get the formatted text to present the date for the input time (HH:mm:ss). */
   public static String formatClockTime(final LocalDateTime time) {
     return time.format(_formatter_clock);
   }

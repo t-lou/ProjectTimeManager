@@ -3,6 +3,7 @@ package ProjectTimeManager;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,10 +23,10 @@ public class ProjectManager {
   private static final String _extension = ".prt";
 
   /** The name of file for this project, if the Manager is used to manage one project. */
-  private String _filename;
+  private final String _filename;
 
   /** The name of the project, will be used as filename for saving the */
-  private String _name;
+  private final String _name;
 
   /** The log manager for time used in this project. */
   private TimeLogManager _log_manager = new TimeLogManager();
@@ -72,21 +73,6 @@ public class ProjectManager {
    */
   private static String getLogFilename(String project_name) {
     return Paths.get(_cache_path, project_name + _extension).toString();
-  }
-
-  /**
-   * Initialize one project, read the previous logging time.
-   *
-   * @param project_name The name of this project.
-   */
-  private void initProject(String project_name) {
-    _name = project_name;
-
-    _filename = getLogFilename(project_name);
-
-    if (isProjectAvailable()) {
-      _log_manager.readLog(_filename);
-    }
   }
 
   /**
@@ -176,10 +162,6 @@ public class ProjectManager {
     return Files.exists(Paths.get(getPathLock()));
   }
 
-  public static void updatePendingSessionTime(final String project_name, final String text) {
-    TimeLogManager.updateThisSession(new ProjectManager(project_name).getPathLock(), text);
-  }
-
   public static String getPendingSessionTime(final String project_name) {
     final List<String> contents = Utils.readFile(new ProjectManager(project_name).getPathLock());
     assert contents != null && contents.size() == 1
@@ -235,13 +217,61 @@ public class ProjectManager {
     }
   }
 
-  public ProjectManager() {
-    prepareDirectory();
+  /**
+   * Show the simple summary of a project.
+   *
+   * @param preferred_dates Which days to summarize.
+   */
+  public String getProjectSummary(ArrayList<Instant> preferred_dates) {
+    final HashMap<Long, ArrayList<Interval>> grouped_log = getGroupedLog();
+
+    final ArrayList<Instant> dates =
+        (preferred_dates != null) ? preferred_dates : ProjectManager.getListDates();
+
+    final ArrayList<Long> dates_as_key =
+        dates.stream()
+            .map(date -> (date.getEpochSecond() / TimeLogManager.SECONDS_PER_DAY))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+    final ArrayList<Long> keys =
+        new ArrayList<>(grouped_log.keySet())
+            .stream()
+                .filter(date -> dates_as_key.contains(date))
+                .sorted()
+                .collect(Collectors.toCollection(ArrayList::new));
+
+    final String eol = System.lineSeparator();
+    String text = "";
+    for (final Long day : keys) {
+      text += Instant.ofEpochSecond(day * TimeLogManager.SECONDS_PER_DAY).toString().split("T")[0];
+
+      final long duration_ms =
+          grouped_log.get(day).stream().map(Interval::getDurationMs).mapToLong(l -> l).sum();
+
+      text += " " + Interval.formatDuration(Duration.ofMillis(duration_ms)) + eol;
+
+      text +=
+          String.join(
+              eol,
+              grouped_log.get(day).stream()
+                  .map(interval -> interval.formatInterval())
+                  .collect(Collectors.toList()));
+
+      text += eol + eol;
+    }
+    return text;
   }
 
   public ProjectManager(String project_name) {
-    this();
-    initProject(project_name);
+    prepareDirectory();
+
+    _name = project_name;
+
+    _filename = getLogFilename(project_name);
+
+    if (isProjectAvailable()) {
+      _log_manager.readLog(_filename);
+    }
   }
 
   public void deleteLock() {
@@ -271,7 +301,7 @@ public class ProjectManager {
    *
    * @param project_name The name of project to start.
    */
-  public static void startProject(String project_name) {
+  public static void startProject(final String project_name) {
     ProjectManager project = new ProjectManager(project_name);
     project.start();
     Runtime.getRuntime()
@@ -294,5 +324,19 @@ public class ProjectManager {
         assert 1 == 2 : "Sleep interrupted! Check date time!";
       }
     }
+  }
+
+  public static void skipPendingSessionAndStart(final String project_name) {
+    new ProjectManager(project_name).deleteLock();
+    startProject(project_name);
+  }
+
+  public static void finishPendingSessionAndStart(
+      final String project_name, final String pending_session_info) {
+    TimeLogManager.updateThisSession(
+        new ProjectManager(project_name).getPathLock(), pending_session_info);
+    finishLastSession(project_name);
+    new ProjectManager(project_name).deleteLock();
+    startProject(project_name);
   }
 }

@@ -178,6 +178,4 @@ public class TimeLogManager {
   public void updateThisSession(final String filename) {
     updateThisSession(filename, new Interval(_time_start, LocalDateTime.now()).formatInterval());
   }
-
-  public TimeLogManager() {}
 }
