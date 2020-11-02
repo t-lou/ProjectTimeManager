@@ -366,9 +366,9 @@ public class GuiManager {
 
   /** Show the main menu. */
   private void mainMenu() {
-    final JButton button_checkin =
+    final JButton button_clockin =
         initButton(
-            "CHECK IN",
+            "CLOCK IN",
             new ActionListener() {
               public void actionPerformed(ActionEvent e) {
 
@@ -403,7 +403,7 @@ public class GuiManager {
 
     JPanel panel = initGuiWithPanel("Project Time Manager");
 
-    panel.add(button_checkin);
+    panel.add(button_clockin);
     panel.add(button_start);
     panel.add(button_list);
     panel.add(button_date);

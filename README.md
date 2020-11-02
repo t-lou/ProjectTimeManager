@@ -5,6 +5,8 @@ provide either too many unnecessary functionalities or are too easy to mess up (
 
 This toy project contains easy-to-use time logger with clear text log files (for manual modification) and GUI.
 
+If Python is more available than JDK on your computer, a lite version for clock-in and report generation is: https://github.com/t-lou/clock_in.
+
 # Start
 
 - **Linux** run start.sh in terminal
@@ -24,7 +26,7 @@ run corresponding script in scripts
 
 # Functions
 
-- **check in** check in immediately and start a project with name YEAR-MONTH
+- **clock in** clock in immediately and start a project with name YEAR-MONTH
 - **start** start a new project (editable text field) or continue an existing project, hit ctrl-c when the work is
 paused or ended
 - **projects** show the sum of time for projects or select and show the log for one project
@@ -32,7 +34,7 @@ paused or ended
 
 # Report
 
-Report for project (now only tested for check-in) can be generated in RTF format.
+Report for project (now only tested for clock-in) can be generated in RTF format.
 
 # Logs
 
